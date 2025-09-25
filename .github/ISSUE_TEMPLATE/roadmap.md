@@ -1,10 +1,12 @@
+---
 name: 📌 Roadmap
 about: Tracking planned features and improvements for H5P Sensei Bridge
 title: "Roadmap"
 labels: roadmap, enhancement
 assignees: ''
+---
 
-# Roadmap — H5P Sensei Bridge
+# 📌 Roadmap — H5P Sensei Bridge
 
 ## Phase 1: Stabilization & Polish
 - [ ] **Cache & fetch robustness** – Ensure fresh status data is always used (no browser/proxy caching issues).
@@ -21,6 +23,7 @@ assignees: ''
 - [ ] **Shortcode / Gutenberg block** – Provide a block to display task progress (list or progress bar) anywhere in lesson content.
 - [ ] **Refined REST endpoint** – Add a clean `/h5p-progress` endpoint for external tools/dashboards.
 
+---
 
 ## Phase 3: Advanced Features
 - [ ] **Analytics dashboard** – Aggregated data per course: % of students passing each H5P, average scores, attempts distribution.
@@ -29,8 +32,11 @@ assignees: ''
 - [ ] **Data export** – Allow teachers to export H5P results to CSV/Excel.
 - [ ] **xAPI LRS integration** – Push statements to external LRS for enterprise-level learning analytics.
 
+---
 
 ## Phase 4: Nice-to-Have / Stretch Goals
 - [ ] **Custom theming** – Let admins override the look & feel of overlays, badges, and status panels without touching code.
 - [ ] **Notifications** – Email/notify teachers when all tasks are completed by a student (or when someone is struggling).
 - [ ] **Compatibility with other LMS plugins** – Explore support for LearnDash, LifterLMS, or TutorLMS in addition to Sensei.
+
+---
