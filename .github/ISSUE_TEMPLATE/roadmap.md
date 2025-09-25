@@ -1,12 +1,13 @@
 ---
-name: 📌 Roadmap
+name: Roadmap
 about: Tracking planned features and improvements for H5P Sensei Bridge
-title: "Roadmap"
-labels: roadmap, enhancement
+title: Roadmap
+labels: enhancement
 assignees: ''
+
 ---
 
-# 📌 Roadmap — H5P Sensei Bridge
+# Roadmap — H5P Sensei Bridge
 
 ## Phase 1: Stabilization & Polish
 - [ ] **Cache & fetch robustness** – Ensure fresh status data is always used (no browser/proxy caching issues).
