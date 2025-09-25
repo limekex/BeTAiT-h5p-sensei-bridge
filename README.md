@@ -1,4 +1,3 @@
-```bash
 # H5P Sensei Bridge
 
 A WordPress plugin that bridges **H5P** task results with **Sensei LMS** lessons and quizzes.  
@@ -207,4 +206,3 @@ MIT. See `LICENSE`.
 
 - H5P (https://h5p.org/)
 - Sensei LMS (Automattic)
-```
