@@ -154,6 +154,10 @@ class FKHS_Plugin {
 			true
 		);
 
+		// Når du enqueuer skriptet:
+		wp_set_script_translations('fkhs-admin-report', 'h5p-sensei-bridge', plugin_dir_path(__FILE__) . 'languages');
+
+
 		/**
 		 * Localized data passed to the bridge script.
 		 * You may filter this to add custom flags for your theme/flow.
@@ -175,13 +179,15 @@ class FKHS_Plugin {
 				'practiceAgain'        => __( 'Practice again', 'h5p-sensei-bridge' ),
 				'retryNow'             => __( 'Retry now', 'h5p-sensei-bridge' ),
 
-				// NEW for status panel
 				'statusHeading'        => __( 'Lesson tasks status', 'h5p-sensei-bridge' ),
 				'statusAllPassed'      => __( 'All tasks are passed. You can continue.', 'h5p-sensei-bridge' ),
 				'statusProgress'       => __( '%1$d of %2$d tasks passed', 'h5p-sensei-bridge' ),
 				'statusRemaining'      => __( 'Remaining:', 'h5p-sensei-bridge' ),
 				'statusViewTask'       => __( 'View task', 'h5p-sensei-bridge' ),
 				'statusRemainingItem' => __( '%1$s — best %2$s, required %3$s', 'h5p-sensei-bridge' ),
+				'taskPassed'        => __( 'Task passed', 'h5p-sensei-bridge' ),
+				'notPassedYet'      => __( 'Not passed yet', 'h5p-sensei-bridge' ),
+
 			),
 		);
 

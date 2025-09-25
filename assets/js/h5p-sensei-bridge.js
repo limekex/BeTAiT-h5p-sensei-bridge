@@ -1,8 +1,13 @@
 (function () {
   'use strict';
-  // Global “gate”-status vi bruker overalt
-  var fkhsGatePassed = false;
+  // Global “gate”-status vi bruker overalt og
+ // var fkhsGatePassed = false;
+window.fkhsGatePassed = false;
 
+// 2) Legg til en hjelpefunksjon:
+function setGate(val) {
+  window.fkhsGatePassed = !!val;
+}
 
   // Generic style injector (prevents duplicates by id)
   function injectStyle(id, css){
@@ -26,9 +31,10 @@ injectStyle('fkhs-bridge-status-css', `
   .fkhs-status-link{cursor:pointer; text-decoration:underline}
 
   /* NEW: when inside the lesson footer */
+  .sensei-lesson-footer {display: block !important;}
   .sensei-lesson-footer > .fkhs-status-panel{
-    display:block;
-    width:auto;
+    /*display:block;*/
+    7*width:auto;*/
     margin-top:0;         /* vi legger den først – null toppmarg */
     margin-bottom:1rem;   /* litt luft til resten */
     order:0;
@@ -113,8 +119,8 @@ injectStyle('fkhs-bridge-status-css', `
         if (!passed && typeof raw === 'number' && typeof max === 'number' && max > 0) {
           passed = (raw / max) * 100 >= (window.fkH5P?.threshold || 70);
         }
-        fkhsGatePassed = !!passed;
-        setQuizButtonVisibility(passed);
+        //fkhsGatePassed = !!passed;
+        //setQuizButtonVisibility(passed);
         fetchAndRenderH5PStatus();
       })
       .catch(function () {});
@@ -228,8 +234,8 @@ function ensureStatusPanel(){
     if (footer.firstChild !== panel) {
       footer.insertBefore(panel, footer.firstChild);
     }
-    //panel.style.display = 'block';
-    //panel.style.width = '100%';
+    panel.style.display = 'block';
+    panel.style.width = '100%';
     if (window.fkH5P?.debug) panel.style.outline = '2px dashed #10b981';
     return panel;
   }
@@ -430,153 +436,162 @@ function ensureStatusPanel(){
   /**
    * Hide/disable quiz CTA until passed (cosmetic; server-gate is authoritative).
    */
-function setQuizButtonVisibility(passed) {
-  try {
-    if (!window.fkH5P?.require) return;   // kravet er av
-    if (window.fkH5P?.bypass) return;     // admin/lærer omgår (test som student for å se locking)
+      function setQuizButtonVisibility(passed) {
+        try {
+          if (!window.fkH5P?.require) return;   // kravet er av
+          if (window.fkH5P?.bypass)  return;    // admin/lærer omgår
 
-    var tooltip = window.fkH5P?.i18n?.completeH5PFirst || 'Complete the H5P first';
+          var tooltip = window.fkH5P?.i18n?.completeH5PFirst || 'Complete the H5P first';
 
-    // Finn alle varianter: <a>, <button>, <form>
-    var links = Array.prototype.slice.call(document.querySelectorAll(
-      '.sensei-lesson-actions a[href*="quiz"], a.sensei-quiz-link, a[href*="/quiz/"], .sensei-buttons-container a[href*="quiz"]'
-    ));
+          // Finn alle varianter: <a>, <button>, <form>
+          var links = Array.prototype.slice.call(document.querySelectorAll(
+            '.sensei-lesson-actions a[href*="quiz"], a.sensei-quiz-link, a[href*="/quiz/"], .sensei-buttons-container a[href*="quiz"]'
+          ));
 
-    var buttons = Array.prototype.slice.call(document.querySelectorAll(
-      // Sensei blokka med <button>
-      '.wp-block-sensei-lms-button-view-quiz button.wp-block-button__link,' +
-      // Din konkrete markup: data-id="complete-lesson-button"
-      'form.lesson_button_form [data-id="complete-lesson-button"],' +
-      // fallback: alle knapper inne i “view quiz” blokk
-      '.wp-block-sensei-lms-button-view-quiz button'
-    ));
+          var buttons = Array.prototype.slice.call(document.querySelectorAll(
+            // Sensei-blokka med <button>
+            '.wp-block-sensei-lms-button-view-quiz button.wp-block-button__link,' +
+            // Din konkrete markup: data-id="complete-lesson-button"
+            'form.lesson_button_form [data-id="complete-lesson-button"],' +
+            // Fallback: alle knapper inne i “view quiz”-blokk
+            '.wp-block-sensei-lms-button-view-quiz button'
+          ));
 
-    var forms = Array.prototype.slice.call(document.querySelectorAll(
-      'form.lesson_button_form, .wp-block-sensei-lms-button-view-quiz form, .sensei-buttons-container form'
-    )).filter(function (f) {
-      var action = (f.getAttribute('action') || '').toLowerCase();
-      return action.includes('/quiz/') || action.includes('view-quiz') || action.includes('quiz');
-    });
+          var forms = Array.prototype.slice.call(document.querySelectorAll(
+            'form.lesson_button_form, .wp-block-sensei-lms-button-view-quiz form, .sensei-buttons-container form'
+          )).filter(function (f) {
+            var action = (f.getAttribute('action') || '').toLowerCase();
+            return action.includes('/quiz/') || action.includes('view-quiz') || action.includes('quiz');
+          });
 
-    // Relevante verter rundt knappene/lenkene (brukes for capture-klikk)
-    var hosts = Array.prototype.slice.call(document.querySelectorAll(
-      '.sensei-buttons-container, .wp-block-sensei-lms-button-view-quiz, form.lesson_button_form'
-    ));
+          // Relevante verter rundt knappene/lenkene (brukes for capture-klikk)
+          var hosts = Array.prototype.slice.call(document.querySelectorAll(
+            '.sensei-buttons-container, .wp-block-sensei-lms-button-view-quiz, form.lesson_button_form'
+          ));
 
+          if (window.fkH5P?.debug) {
+            console.debug('[FKHS] require:', window.fkH5P.require, 'bypass:', window.fkH5P.bypass, 'passed:', passed);
+            console.debug('[FKHS] found links:', links.length, 'buttons:', buttons.length, 'forms:', forms.length, 'hosts:', hosts.length);
+          }
 
-    // Debug: se hva vi treffer
-    if (window.fkH5P?.debug) {
-      console.debug('[FKHS] require:', window.fkH5P.require, 'bypass:', window.fkH5P.bypass, 'passed:', passed);
-      console.debug('[FKHS] found links:', links.length, 'buttons:', buttons.length, 'forms:', forms.length);
-    }
+          // Hjelpere for (en)able
+          function disableEl(el) {
+            if (!el) return;
+            // Ikke bruk disabled/pointer-events; vi vil fange klikket og vise varsel.
+            el.setAttribute('aria-disabled', 'true');
+            el.style.opacity = '0.5';
+            el.title = tooltip;
+            el.classList.add('fkhs-locked');
+          }
+          function enableEl(el) {
+            if (!el) return;
+            el.removeAttribute('aria-disabled');
+            el.style.opacity = '';
+            el.title = '';
+            el.classList.remove('fkhs-locked');
+          }
 
-    // Hjelpere for (en)able
-   function disableEl(el) {
-    if (!el) return;
-    // Ikke bruk disabled eller pointer-events; vi vil fange klikket og vise varsel.
-    el.setAttribute('aria-disabled', 'true');
-    el.style.opacity = '0.5';
-    el.title = tooltip;
-    el.classList.add('fkhs-locked');
-  }
-  function enableEl(el) {
-    if (!el) return;
-    el.removeAttribute('aria-disabled');
-    el.style.opacity = '';
-    el.title = '';
-    el.classList.remove('fkhs-locked');
-  }
-
-    // Stopp både submit OG click når ikke bestått
-    function preventSubmit(e) {
-      if (!passed) {
-        e.preventDefault();
-        e.stopPropagation();
-        var t = e.target.closest('button, a');
-        if (t && !t.title) t.title = tooltip;
-        showBlockedNotice(t);
-      }
-    }
-    function preventClick(e) {
-      if (!passed) {
-        e.preventDefault();
-        e.stopPropagation();
-        var t = e.target.closest('button, a');
-        if (t && !t.title) t.title = tooltip;
-        showBlockedNotice(t);
-      }
-    }
-
-    function hostClick(e) {
-      if (passed) return;
-      var t = e.target.closest('a, button');
-      if (!t) return;
-      // Kun stopp hvis "låst" eller markert aria-disabled
-      if (t.classList.contains('fkhs-locked') || t.getAttribute('aria-disabled') === 'true') {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!t.title) t.title = tooltip;
-        showBlockedNotice(t);
-      }
-    }
-
-    function preventKey(e) {
-      if (!passed && (e.key === 'Enter' || e.key === ' ')) {
-        var t = e.target.closest('button, a');
-        if (!t) return;
-        e.preventDefault();
-        e.stopPropagation();
-        if (!t.title) t.title = tooltip;
-        showBlockedNotice(t);
-      }
-    }
-
-
-
-    if (passed) {
-        links.forEach(enableEl);
-        buttons.forEach(enableEl);
-
-        forms.forEach(function (f) {
-          f.removeEventListener('submit', preventSubmit, true);
-        });
-
-        // Fjern click/keydown-stoppere også
-        links.forEach(function (a) {
-          a.removeEventListener('click', preventClick, true);
-          a.removeEventListener('keydown', preventKey, true);
-        });
-        buttons.forEach(function (b) {
-          b.removeEventListener('click', preventClick, true);
-          b.removeEventListener('keydown', preventKey, true);
-        });
-
-        hosts.forEach(function (h) {
-          h.removeEventListener('click', hostClick, true);
-        });
-      } else {
-        links.forEach(disableEl);
-        buttons.forEach(disableEl);
-
-        // Fang både submit, click og keydown i capture-phase
-        forms.forEach(function (f) {
-          f.addEventListener('submit', preventSubmit, true);
-        });
-
-        links.forEach(function (a) {
-          a.addEventListener('click', preventClick, true);
-          a.addEventListener('keydown', preventKey, true);
-        });
-        buttons.forEach(function (b) {
-          b.addEventListener('click', preventClick, true);
-          b.addEventListener('keydown', preventKey, true);
-        });
-
-        hosts.forEach(function (h) {
-          h.addEventListener('click', hostClick, true); });
+          // Stopp både submit OG click når ikke bestått
+          function preventSubmit(e) {
+            if (!passed) {
+              e.preventDefault();
+              e.stopPropagation();
+              var t = e.target.closest('button, a');
+              if (t && !t.title) t.title = tooltip;
+              showBlockedNotice(t);
             }
-        } catch (e) { if (window.fkH5P?.debug) console.warn('[FKHS] setQuizButtonVisibility error', e); }
+          }
+          function preventClick(e) {
+            if (!passed) {
+              e.preventDefault();
+              e.stopPropagation();
+              var t = e.target.closest('button, a');
+              if (t && !t.title) t.title = tooltip;
+              showBlockedNotice(t);
+            }
+          }
+          function hostClick(e) {
+            if (passed) return;
+            var t = e.target.closest('a, button');
+            if (!t) return;
+            // Kun stopp hvis "låst" eller markert aria-disabled
+            if (t.classList.contains('fkhs-locked') || t.getAttribute('aria-disabled') === 'true') {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!t.title) t.title = tooltip;
+              showBlockedNotice(t);
+            }
+          }
+          function preventKey(e) {
+            if (!passed && (e.key === 'Enter' || e.key === ' ')) {
+              var t = e.target.closest('button, a');
+              if (!t) return;
+              e.preventDefault();
+              e.stopPropagation();
+              if (!t.title) t.title = tooltip;
+              showBlockedNotice(t);
+            }
+          }
+
+          if (passed) {
+            // Enable alt
+            links.forEach(enableEl);
+            buttons.forEach(enableEl);
+
+            forms.forEach(function (f) {
+              f.removeEventListener('submit', preventSubmit, true);
+            });
+
+            // Fjern click/keydown-stoppere også
+            links.forEach(function (a) {
+              a.removeEventListener('click',   preventClick, true);
+              a.removeEventListener('keydown', preventKey,   true);
+            });
+            buttons.forEach(function (b) {
+              b.removeEventListener('click',   preventClick, true);
+              b.removeEventListener('keydown', preventKey,   true);
+            });
+
+            // Fjern host-click “gate” når ulåst
+            hosts.forEach(function (h) {
+              if (h._fkhsLockBound) {
+                h.removeEventListener('click', hostClick, true);
+                h._fkhsLockBound = false;
+              }
+            });
+
+          } else {
+            // Disable alt
+            links.forEach(disableEl);
+            buttons.forEach(disableEl);
+
+            // Fang både submit, click og keydown i capture-phase
+            forms.forEach(function (f) {
+              f.addEventListener('submit', preventSubmit, true);
+            });
+            links.forEach(function (a) {
+              a.addEventListener('click',   preventClick, true);
+              a.addEventListener('keydown', preventKey,   true);
+            });
+            buttons.forEach(function (b) {
+              b.addEventListener('click',   preventClick, true);
+              b.addEventListener('keydown', preventKey,   true);
+            });
+
+            // Legg til host-click “gate” når låst (men bare én gang)
+            hosts.forEach(function (h) {
+              if (!h._fkhsLockBound) {
+                h.addEventListener('click', hostClick, true);
+                h._fkhsLockBound = true;
+              }
+            });
+          }
+
+        } catch (e) {
+          if (window.fkH5P?.debug) console.warn('[FKHS] setQuizButtonVisibility error', e);
+        }
       }
+
 
 
 
@@ -654,12 +669,13 @@ function setQuizButtonVisibility(passed) {
       if (window.fkH5P?.debug) console.debug('[FKHS] boot', window.fkH5P);
 
       // start konservativt (låst) til vi har status
-      fkhsGatePassed = false;
-      setQuizButtonVisibility(fkhsGatePassed);
+      setGate(false);
+      setQuizButtonVisibility(window.fkhsGatePassed);
 
       // Ved DOM-endringer: behold nåværende sannhet, ikke hardkode false
       var mo = new MutationObserver(function(){
-        setQuizButtonVisibility(fkhsGatePassed);
+        //setQuizButtonVisibility(fkhsGatePassed);
+        setQuizButtonVisibility(window.fkhsGatePassed);
       });
       mo.observe(document.body, { childList: true, subtree: true });
 
@@ -670,19 +686,27 @@ function setQuizButtonVisibility(passed) {
 
 function fetchAndRenderH5PStatus(){
   try {
-    var url = (window.fkH5P?.restUrl || '').replace(/\/h5p-xapi$/, '/h5p-status');
-    var q = '?lesson_id=' + encodeURIComponent(window.fkH5P?.lessonId || 0);
+    var base = (window.fkH5P?.restUrl || '').replace(/\/h5p-xapi$/, '/h5p-status');
+    var q = '?lesson_id=' + encodeURIComponent(window.fkH5P?.lessonId || 0) +
+            '&_ts=' + Date.now(); // cache-bust
 
-    fetch(url + q, {
+    fetch(base + q, {
       method: 'GET',
-      headers: { 'X-WP-Nonce': window.fkH5P?.nonce }
+      credentials: 'same-origin',
+      cache: 'no-store', // viktig mot nettleser-cache
+      headers: {
+        'X-WP-Nonce': window.fkH5P?.nonce || '',
+        // ekstra signaler mot mellomlagre / proxy
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     })
-    .then(function(r){ return r.json(); })
+    .then(function(r){ return r.ok ? r.json() : Promise.reject(r); })
     .then(function(json){
       if (!json?.ok || !Array.isArray(json.items)) return;
 
-      // Anta at alt er bestått til vi finner en som ikke er det
-      var overallPassed = true;
+      var overallPassed = true; // anta passert til vi finner unntak
 
       json.items.forEach(function(item){
         var cid       = item.content_id;
@@ -690,7 +714,6 @@ function fetchAndRenderH5PStatus(){
         var best      = item.best || {};
         var threshold = item.threshold;
 
-        // Prosent
         var latestPct = (typeof latest.pct === 'number')
           ? latest.pct
           : ((typeof latest.raw === 'number' && typeof latest.max === 'number' && latest.max > 0)
@@ -704,10 +727,8 @@ function fetchAndRenderH5PStatus(){
         var bestPasses   = (typeof bestPct === 'number') && (bestPct >= threshold);
         var latestPasses = !!latest.passed;
 
-        // Oppdater totalstatus
         if (!(bestPasses || latestPasses)) overallPassed = false;
 
-        // Tekst (vis både råscore og prosent når mulig)
         var useRaw = (typeof best.raw === 'number' ? best.raw : latest.raw);
         var useMax = (typeof best.max === 'number' ? best.max : latest.max);
         var usePct = (typeof bestPct === 'number' ? bestPct : latestPct);
@@ -717,7 +738,7 @@ function fetchAndRenderH5PStatus(){
           .replace('%2$s', format(useMax));
         if (typeof usePct === 'number') passedTxt += ' (' + formatPct(usePct) + ')';
 
-        var failTxt = (window.fkH5P?.i18n?.overlayNotPassed || 'Taken earlier, not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.')
+        var failTxt = (window.fkH5P?.i18n?.overlayNotPassed || 'Not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.')
           .replace('%1$s', format(best.raw))
           .replace('%2$s', format(best.max))
           .replace('%3$s', formatPct(threshold));
@@ -725,36 +746,43 @@ function fetchAndRenderH5PStatus(){
           failTxt = failTxt.replace('Best score:', 'Best score (' + formatPct(bestPct) + '):');
         }
 
-        // Målcontainere for denne H5P-en
         var targets = findH5PContainersById(cid);
         if (!targets.length) return;
 
-        // Badge + overlay
-        targets.forEach(function(t){
+        targets.forEach(function (t) {
+          var titlePassed = window.fkH5P?.i18n?.taskPassed || 'Task passed';
+          var titleFail   = window.fkH5P?.i18n?.notPassedYet || 'Not passed yet';
+
           if (bestPasses || latestPasses) {
             attachBadge(t, passedTxt, 'pass');
             if (t.dataset.fkhsDismissed !== '1') {
-              attachOverlay(t, 'pass', 'Task passed', passedTxt, {});
+              attachOverlay(t, 'pass', titlePassed, passedTxt, {});
             }
           } else {
-            attachBadge(t, failTxt, 'fail', function(){
-              t.scrollIntoView({ behavior:'smooth', block:'center' });
+            attachBadge(t, failTxt, 'fail', function () {
+              t.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
-            attachOverlay(t, 'fail', 'Not passed yet', failTxt, {});
+            attachOverlay(t, 'fail', titleFail, failTxt, {});
           }
         });
       });
 
-      // Oppdater knappelås basert på totalstatus
-      fkhsGatePassed = overallPassed;                 // global sannhet
-      setQuizButtonVisibility(fkhsGatePassed);        // åpne/lukke CTA
+      // global sannhet + CTA
+      setGate(overallPassed);
+      setQuizButtonVisibility(window.fkhsGatePassed);
 
-      // Panel under knappene
+      // statuspanelet under knappene
       renderStatusPanelFromItems(json.items);
     })
-    .catch(function(){});
-  } catch(e){}
+    .catch(function(err){
+      if (window.fkH5P?.debug) console.warn('[FKHS] status fetch failed', err);
+    });
+  } catch(e){
+    if (window.fkH5P?.debug) console.warn('[FKHS] status error', e);
+  }
 }
+
+
 
   bind();
 })();

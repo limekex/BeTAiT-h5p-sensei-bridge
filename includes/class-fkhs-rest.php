@@ -72,121 +72,174 @@ class FKHS_REST {
 				),
 			)
 		);
-		register_rest_route( 'fkhs/v1', '/h5p-status', [
-		'methods'  => 'GET',
-		'permission_callback' => function () { return is_user_logged_in(); },
-		'callback' => [ __CLASS__, 'status' ],
-		'args'     => [
-			'lesson_id' => [
-				'type'     => 'integer',
-				'required' => true,
-			],
-		],
-	] );
 
+		register_rest_route(
+			'fkhs/v1',
+			'/h5p-status',
+			array(
+				'methods'             => 'GET',
+				'permission_callback' => function () { return is_user_logged_in(); },
+				'callback'            => array( __CLASS__, 'status' ),
+				'args'                => array(
+					'lesson_id' => array(
+						'type'     => 'integer',
+						'required' => true,
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Add strong no-cache headers to a REST response (browser, proxies, LSCache).
+	 *
+	 * @param WP_REST_Response $response Response object to modify.
+	 * @return WP_REST_Response
+	 */
+	private static function apply_no_cache_headers( $response ) {
+		if ( $response instanceof WP_REST_Response ) {
+			$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
+			$response->header( 'Pragma', 'no-cache' );
+			$response->header( 'Expires', '0' );
+			// LiteSpeed/LSCache hint:
+			$response->header( 'X-LiteSpeed-Cache-Control', 'no-cache' );
+		}
+		// WordPress helper also sets conservative headers.
+		if ( function_exists( 'nocache_headers' ) ) {
+			nocache_headers();
+		}
+		// LSCache plugin API (no-op if plugin ikke er aktiv):
+		if ( function_exists( 'do_action' ) ) {
+			// Tving no-cache for akkurat denne responsen.
+			do_action( 'litespeed_control_set_nocache' );
+		}
+		return $response;
 	}
 
 	public static function status( WP_REST_Request $req ) {
-	$user_id   = get_current_user_id();
-	$lesson_id = (int) $req->get_param( 'lesson_id' );
-	if ( ! $user_id || ! $lesson_id ) {
-		return new WP_REST_Response( [ 'ok'=>false, 'reason'=>'missing_params' ], 400 );
-	}
+		$user_id   = get_current_user_id();
+		$lesson_id = (int) $req->get_param( 'lesson_id' );
 
-	$threshold = (float) get_post_meta( $lesson_id, '_fkhs_pass_threshold', true );
-	if ( ! $threshold ) $threshold = 70.0;
-
-	$ids = FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id );
-	if ( empty( $ids ) ) {
-		return new WP_REST_Response( [ 'ok'=>true, 'items'=>[] ], 200 );
-	}
-
-	global $wpdb;
-	$table = $wpdb->prefix . FKHS_TABLE;
-
-	$out = [];
-	foreach ( $ids as $cid ) {
-		// Latest attempt for current user/content/lesson
-		$attempt = $wpdb->get_row( $wpdb->prepare(
-			"SELECT raw_score, max_score, passed, created_at
-			   FROM {$table}
-			  WHERE user_id=%d AND lesson_id=%d AND content_id=%d
-			  ORDER BY created_at DESC LIMIT 1",
-			$user_id, $lesson_id, $cid
-		), ARRAY_A );
-
-		// Best pct ever for this user/content/lesson (optional but nice)
-		$best_pct = null;
-		$best_raw = null;
-		$best_max = null;
-
-		$best = $wpdb->get_row( $wpdb->prepare(
-			"SELECT raw_score, max_score
-			   FROM {$table}
-			  WHERE user_id=%d AND lesson_id=%d AND content_id=%d
-			    AND max_score IS NOT NULL AND max_score > 0
-			  ORDER BY (raw_score/max_score) DESC, created_at DESC
-			  LIMIT 1",
-			$user_id, $lesson_id, $cid
-		), ARRAY_A );
-		if ( $best && is_numeric( $best['raw_score'] ) && is_numeric( $best['max_score'] ) && (float)$best['max_score'] > 0 ) {
-			$best_raw = (float) $best['raw_score'];
-			$best_max = (float) $best['max_score'];
-			$best_pct = ( $best_raw / $best_max ) * 100.0;
+		if ( ! $user_id || ! $lesson_id ) {
+			$resp = new WP_REST_Response( array( 'ok' => false, 'reason' => 'missing_params' ), 400 );
+			return self::apply_no_cache_headers( $resp );
 		}
 
-		// Title/type (nice to have)
-		$h5p_title = ''; $h5p_type = '';
-		$c_table = $wpdb->prefix . 'h5p_contents';
-		$l_table = $wpdb->prefix . 'h5p_libraries';
-		$meta = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.title, l.name, l.major_version, l.minor_version
-			   FROM {$c_table} c
-			   LEFT JOIN {$l_table} l ON l.id = c.library_id
-			  WHERE c.id = %d",
-			$cid
-		), ARRAY_A );
-		if ( $meta ) {
-			$h5p_title = (string) ( $meta['title'] ?? '' );
-			$h5p_type  = $meta['name'] ? sprintf( '%s %d.%d', $meta['name'], (int)$meta['major_version'], (int)$meta['minor_version'] ) : '';
+		$threshold = (float) get_post_meta( $lesson_id, '_fkhs_pass_threshold', true );
+		if ( ! $threshold ) {
+			$threshold = 70.0;
 		}
 
-		$latest_pass = false; $latest_raw = null; $latest_max = null; $latest_pct = null;
-		if ( $attempt ) {
-			$latest_raw = is_numeric( $attempt['raw_score'] ) ? (float) $attempt['raw_score'] : null;
-			$latest_max = is_numeric( $attempt['max_score'] ) ? (float) $attempt['max_score'] : null;
-			if ( (int)$attempt['passed'] === 1 ) {
-				$latest_pass = true;
-			} elseif ( $latest_raw !== null && $latest_max && $latest_max > 0 ) {
-				$latest_pct = ( $latest_raw / $latest_max ) * 100.0;
-				$latest_pass = $latest_pct >= $threshold;
+		$ids = FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id );
+		if ( empty( $ids ) ) {
+			$resp = new WP_REST_Response( array( 'ok' => true, 'items' => array() ), 200 );
+			return self::apply_no_cache_headers( $resp );
+		}
+
+		global $wpdb;
+		$table = $wpdb->prefix . FKHS_TABLE;
+
+		$out = array();
+		foreach ( $ids as $cid ) {
+			// Latest attempt for current user/content/lesson
+			$attempt = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT raw_score, max_score, passed, created_at
+					   FROM {$table}
+					  WHERE user_id=%d AND lesson_id=%d AND content_id=%d
+					  ORDER BY created_at DESC LIMIT 1",
+					$user_id,
+					$lesson_id,
+					$cid
+				),
+				ARRAY_A
+			);
+
+			// Best pct ever for this user/content/lesson (optional but nice)
+			$best_pct = null;
+			$best_raw = null;
+			$best_max = null;
+
+			$best = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT raw_score, max_score
+					   FROM {$table}
+					  WHERE user_id=%d AND lesson_id=%d AND content_id=%d
+					    AND max_score IS NOT NULL AND max_score > 0
+					  ORDER BY (raw_score/max_score) DESC, created_at DESC
+					  LIMIT 1",
+					$user_id,
+					$lesson_id,
+					$cid
+				),
+				ARRAY_A
+			);
+			if ( $best && is_numeric( $best['raw_score'] ) && is_numeric( $best['max_score'] ) && (float) $best['max_score'] > 0 ) {
+				$best_raw = (float) $best['raw_score'];
+				$best_max = (float) $best['max_score'];
+				$best_pct = ( $best_raw / $best_max ) * 100.0;
 			}
-		}
-		if ( $latest_pct === null && $latest_raw !== null && $latest_max ) {
-			$latest_pct = ( $latest_raw / $latest_max ) * 100.0;
+
+			// Title/type (nice to have)
+			$h5p_title = '';
+			$h5p_type  = '';
+			$c_table   = $wpdb->prefix . 'h5p_contents';
+			$l_table   = $wpdb->prefix . 'h5p_libraries';
+			$meta      = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT c.title, l.name, l.major_version, l.minor_version
+					   FROM {$c_table} c
+					   LEFT JOIN {$l_table} l ON l.id = c.library_id
+					  WHERE c.id = %d",
+					$cid
+				),
+				ARRAY_A
+			);
+			if ( $meta ) {
+				$h5p_title = (string) ( $meta['title'] ?? '' );
+				$h5p_type  = $meta['name'] ? sprintf( '%s %d.%d', $meta['name'], (int) $meta['major_version'], (int) $meta['minor_version'] ) : '';
+			}
+
+			$latest_pass = false;
+			$latest_raw  = null;
+			$latest_max  = null;
+			$latest_pct  = null;
+			if ( $attempt ) {
+				$latest_raw = is_numeric( $attempt['raw_score'] ) ? (float) $attempt['raw_score'] : null;
+				$latest_max = is_numeric( $attempt['max_score'] ) ? (float) $attempt['max_score'] : null;
+				if ( (int) $attempt['passed'] === 1 ) {
+					$latest_pass = true;
+				} elseif ( $latest_raw !== null && $latest_max && $latest_max > 0 ) {
+					$latest_pct  = ( $latest_raw / $latest_max ) * 100.0;
+					$latest_pass = $latest_pct >= $threshold;
+				}
+			}
+			if ( $latest_pct === null && $latest_raw !== null && $latest_max ) {
+				$latest_pct = ( $latest_raw / $latest_max ) * 100.0;
+			}
+
+			$out[] = array(
+				'content_id' => $cid,
+				'title'      => $h5p_title,
+				'type'       => $h5p_type,
+				'threshold'  => $threshold,
+				'latest'     => array(
+					'raw'    => $latest_raw,
+					'max'    => $latest_max,
+					'pct'    => $latest_pct,
+					'passed' => $latest_pass,
+				),
+				'best'       => array(
+					'raw' => $best_raw,
+					'max' => $best_max,
+					'pct' => $best_pct,
+				),
+			);
 		}
 
-		$out[] = [
-			'content_id'   => $cid,
-			'title'        => $h5p_title,
-			'type'         => $h5p_type,
-			'threshold'    => $threshold,
-			'latest'       => [
-				'raw'     => $latest_raw,
-				'max'     => $latest_max,
-				'pct'     => $latest_pct,
-				'passed'  => $latest_pass,
-			],
-			'best'         => [
-				'raw'     => $best_raw,
-				'max'     => $best_max,
-				'pct'     => $best_pct,
-			],
-		];
+		$resp = new WP_REST_Response( array( 'ok' => true, 'items' => $out ), 200 );
+		return self::apply_no_cache_headers( $resp );
 	}
-
-	return new WP_REST_Response( [ 'ok'=>true, 'items'=>$out ], 200 );
-}
 
 	/**
 	 * Handle POST /fkhs/v1/h5p-xapi

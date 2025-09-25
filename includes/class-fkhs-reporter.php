@@ -52,17 +52,64 @@ class FKHS_Reporter {
 	 * @param string $hook Current admin page.
 	 * @return void
 	 */
-	public static function enqueue_admin( $hook ) {
-		// Load only on our page: admin.php?page=fkhs-report
-		if ( 'toplevel_page_fkhs-report' !== $hook ) return;
+		public static function enqueue_admin( $hook ) {
+			// Bare på vår rapport-side: admin.php?page=fkhs-report
+			if ( 'toplevel_page_fkhs-report' !== $hook ) {
+				return;
+			}
 
-		$rel  = 'assets/js/h5p-sensei-admin-report.js';
-		$path = FKHS_DIR . $rel;
-		$url  = FKHS_URL . $rel;
-		$ver  = file_exists( $path ) ? (string) filemtime( $path ) : FKHS_VER;
+			$rel  = 'assets/js/h5p-sensei-admin-report.js';
+			$path = FKHS_DIR . $rel;
+			$url  = FKHS_URL . $rel;
+			$ver  = file_exists( $path ) ? (string) filemtime( $path ) : FKHS_VER;
 
-		wp_enqueue_script( 'fkhs-admin-report', $url, array(), $ver, true );
-	}
+			// 1) Registrer skriptet først (med wp-i18n som dependency)
+			wp_register_script(
+				'fkhs-admin-report',
+				$url,
+				array( 'wp-i18n' ),
+				$ver,
+				true
+			);
+
+			// 2) Knytt oversettelser (bygg .po/.mo i FKHS_DIR/languages/)
+			wp_set_script_translations(
+				'fkhs-admin-report',
+				'h5p-sensei-bridge',
+				FKHS_DIR . 'languages'
+			);
+
+			// 3) Lokaliser (fallback-tekster dersom wp.i18n ikke er tilgjengelig i runtime)
+			wp_localize_script( 'fkhs-admin-report', 'fkhsAdmin', array(
+				'i18n' => array(
+					'sort'               => __( 'Sort', 'h5p-sensei-bridge' ),
+					'clickToFilter'      => __( 'Click to filter', 'h5p-sensei-bridge' ),
+					'filteredClickToEdit'=> __( 'Filtered – click to edit', 'h5p-sensei-bridge' ),
+					'filter'             => __( 'Filter', 'h5p-sensei-bridge' ),
+					'user'               => __( 'User', 'h5p-sensei-bridge' ),
+					'lesson'             => __( 'Lesson', 'h5p-sensei-bridge' ),
+					'dateRange'          => __( 'Date range', 'h5p-sensei-bridge' ),
+					'scorePct'           => __( 'Score (%)', 'h5p-sensei-bridge' ),
+					'criterionPct'       => __( 'Criterion (%)', 'h5p-sensei-bridge' ),
+					'passed'             => __( 'Passed', 'h5p-sensei-bridge' ),
+					'completed'          => __( 'Completed', 'h5p-sensei-bridge' ),
+					'noFilterForColumn'  => __( 'No filter for this column.', 'h5p-sensei-bridge' ),
+					'clear'              => __( 'Clear', 'h5p-sensei-bridge' ),
+					'apply'              => __( 'Apply', 'h5p-sensei-bridge' ),
+					'resetFilters'       => __( 'Reset filters', 'h5p-sensei-bridge' ),
+					'prev'               => __( 'Prev', 'h5p-sensei-bridge' ),
+					'next'               => __( 'Next', 'h5p-sensei-bridge' ),
+					'rowsLabel'          => __( 'Rows: %d', 'h5p-sensei-bridge' ),
+					'any'                => __( 'Any', 'h5p-sensei-bridge' ),
+					'yes'                => __( 'Yes', 'h5p-sensei-bridge' ),
+					'no'                 => __( 'No', 'h5p-sensei-bridge' ),
+				),
+			) );
+
+			// 4) Enqueue
+			wp_enqueue_script( 'fkhs-admin-report' );
+		}
+
 
 
 	/**

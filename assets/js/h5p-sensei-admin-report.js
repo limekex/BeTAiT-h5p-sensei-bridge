@@ -1,8 +1,51 @@
 (function () {
   'use strict';
 
+  // ---------- i18n: kildestrenger per nøkkel ----------
+  var MSG = {
+    sort: 'Sort',
+    clickToFilter: 'Click to filter',
+    filteredClickToEdit: 'Filtered – click to edit',
+    filter: 'Filter',
+    user: 'User',
+    lesson: 'Lesson',
+    dateRange: 'Date range',
+    scorePct: 'Score (%)',
+    criterionPct: 'Criterion (%)',
+    passed: 'Passed',
+    completed: 'Completed',
+    noFilterForColumn: 'No filter for this column.',
+    clear: 'Clear',
+    apply: 'Apply',
+    resetFilters: 'Reset filters',
+    prev: 'Prev',
+    next: 'Next',
+    rowsLabel: 'Rows: %d',
+    any: 'Any',
+    yes: 'Yes',
+    no: 'No'
+  };
+
+  // ---------- i18n helper ----------
+// i18n helper: bruk lokaliserte tekster fra PHP først, deretter wp.i18n som sekundær fallback.
+function t(key, fallback) {
+  // 1) Først: våre lokaliserte strenger fra wp_localize_script
+  if (window.fkhsAdmin && window.fkhsAdmin.i18n && window.fkhsAdmin.i18n[key]) {
+    return window.fkhsAdmin.i18n[key];
+  }
+  // 2) Deretter: prøv wp.i18n (hvis du senere går "full JSON" med __() i JS)
+  try {
+    if (window.wp && wp.i18n && typeof wp.i18n.__ === 'function') {
+      return wp.i18n.__(fallback, 'h5p-sensei-bridge');
+    }
+  } catch (e) {}
+  // 3) Til slutt: ren fallback-tekst
+  return fallback;
+}
+
+
   var TABLE_ID = 'fkhs-report-table';
-  var PAGE_SIZES = [25, 50, 100, 200];
+  var PAGE_SIZES = [10, 25, 50, 100, 200];
 
   var rows = [];
   var filtered = [];
@@ -26,64 +69,59 @@
   };
 
   // --- global popup closers (fixes: can't reopen after closing) ---
-var popOpen = null;
-function removeGlobalClosers() {
-  window.removeEventListener('click', onWinClick, true);
-  window.removeEventListener('keydown', onWinKey, true);
-}
-function onWinClick(e) {
-  // Hvis vi klikker inne i popup: ikke lukk
-  if (popOpen && popOpen.contains(e.target)) return;
-  closePop();
-  removeGlobalClosers();
-}
-function onWinKey(e) {
-  if (e.key === 'Escape') {
+  var popOpen = null;
+  function removeGlobalClosers() {
+    window.removeEventListener('click', onWinClick, true);
+    window.removeEventListener('keydown', onWinKey, true);
+  }
+  function onWinClick(e) {
+    if (popOpen && popOpen.contains(e.target)) return;
     closePop();
     removeGlobalClosers();
   }
-}
-function addGlobalClosers() {
-  // capture-phase så vi alltid fanger uten å krangle med andre handlers
-  window.addEventListener('click', onWinClick, true);
-  window.addEventListener('keydown', onWinKey, true);
-}
+  function onWinKey(e) {
+    if (e.key === 'Escape') {
+      closePop();
+      removeGlobalClosers();
+    }
+  }
+  function addGlobalClosers() {
+    window.addEventListener('click', onWinClick, true);
+    window.addEventListener('keydown', onWinKey, true);
+  }
 
   function $(sel, ctx){ return (ctx || document).querySelector(sel); }
   function $all(sel, ctx){ return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
   function toNum(v){ var n = parseFloat(v); return isNaN(n) ? null : n; }
   function cmp(a,b){ return a<b?-1:a>b?1:0; }
   function closePop(){
-  if (openPop && openPop.parentNode) openPop.parentNode.removeChild(openPop);
-  openPop = null;
-  popOpen = null;
-}
-
-
-  
+    if (openPop && openPop.parentNode) openPop.parentNode.removeChild(openPop);
+    openPop = null;
+    popOpen = null;
+  }
 
   function injectStyles() {
     var css = `
-        .fkhs-input,.fkhs-select{border:1px solid #ddd;border-radius:8px;padding:.35rem .5rem;font:inherit;background:#fff}
-        .fkhs-btn{border:1px solid #ddd;border-radius:8px;padding:.35rem .6rem;background:#fff;cursor:pointer}
-        .fkhs-btn:hover{background:#f6f6f6}
-        .fkhs-pill{border:1px solid #ddd;border-radius:999px;padding:.25rem .6rem;background:#fafafa}
-        .fkhs-pagination{display:flex;gap:.5rem;align-items:center;margin:.75rem 0}
-        .fkhs-header{position:relative; white-space:nowrap; user-select:none}
-        .fkhs-head-wrap{display:inline-flex;align-items:center;gap:.35rem}
-        .fkhs-sort-btn{border:1px solid #ddd;border-radius:6px;padding:.1rem .35rem;background:#fff;font-size:12px;cursor:pointer;opacity:.8}
-        .fkhs-sort-btn:hover{background:#f6f6f6;opacity:1}
-        .fkhs-pop{position:absolute;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.10);padding:.75rem;z-index:99999;min-width:240px}
-        .fkhs-pop h4{margin:.25rem 0 .5rem 0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em}
-        .fkhs-pop .row{display:flex;gap:.5rem;margin:.35rem 0}
-        .fkhs-pop .row > * {flex:1}
-        .fkhs-small{font-size:12px;color:#666}
-        .fkhs-filter-icon{display:inline-flex;align-items:center;justify-content:center;margin-left:.25rem;opacity:.45;transition:opacity .15s,transform .15s}
-        .fkhs-header:hover .fkhs-filter-icon{opacity:.85;transform:translateY(-1px)}
-        .fkhs-filter-icon svg{width:.8rem;height:.8rem;display:block;fill:currentColor;color:#64748b}
-        .fkhs-filter-active .fkhs-filter-icon svg{color:#3478f6}
-        .fkhs-filter-dot{width:.5rem;height:.5rem;border-radius:50%;background:#3478f6;display:inline-block;margin-left:.35rem;vertical-align:middle;opacity:.85}
-        .fkhs-filter-inactive .fkhs-filter-dot{display:none}
+      .fkhs-input,.fkhs-select{border:1px solid #ddd;border-radius:8px;padding:.35rem .5rem;font:inherit;background:#fff}
+      .fkhs-btn{border:1px solid #ddd;border-radius:8px;padding:.35rem .6rem;background:#fff;cursor:pointer}
+      .fkhs-btn:hover{background:#f6f6f6}
+      .fkhs-pill{border:1px solid #ddd;border-radius:999px;padding:.25rem .6rem;background:#fafafa}
+      .fkhs-pagination{display:flex;gap:.5rem;align-items:center;margin:.75rem 0}
+      .fkhs-header{position:relative; white-space:nowrap; user-select:none}
+      .fkhs-head-wrap{display:inline-flex;align-items:center;gap:.35rem}
+      .fkhs-sort-btn{border:1px solid #ddd;border-radius:6px;padding:.1rem .35rem;background:#fff;font-size:12px;cursor:pointer;opacity:.8}
+      .fkhs-sort-btn:hover{background:#f6f6f6;opacity:1}
+      .fkhs-pop{position:absolute;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.10);padding:.75rem;z-index:99999;min-width:240px}
+      .fkhs-pop h4{margin:.25rem 0 .5rem 0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em}
+      .fkhs-pop .row{display:flex;gap:.5rem;margin:.35rem 0}
+      .fkhs-pop .row > * {flex:1}
+      .fkhs-small{font-size:12px;color:#666}
+      .fkhs-filter-icon{display:inline-flex;align-items:center;justify-content:center;margin-left:.25rem;opacity:.45;transition:opacity .15s,transform .15s}
+      .fkhs-header:hover .fkhs-filter-icon{opacity:.85;transform:translateY(-1px)}
+      .fkhs-filter-icon svg{width:.8rem;height:.8rem;display:block;fill:currentColor;color:#64748b}
+      .fkhs-filter-active .fkhs-filter-icon svg{color:#3478f6}
+      .fkhs-filter-dot{width:.5rem;height:.5rem;border-radius:50%;background:#3478f6;display:inline-block;margin-left:.35rem;vertical-align:middle;opacity:.85}
+      .fkhs-filter-inactive .fkhs-filter-dot{display:none}
     `;
     var el = document.createElement('style');
     el.textContent = css;
@@ -170,7 +208,7 @@ function addGlobalClosers() {
     });
   }
 
-  // IMPORTANT: actually reorders DOM
+  // Reorders DOM i henhold til filtrering/sortering/paginering
   function renderPage() {
     var table = document.getElementById(TABLE_ID);
     if (!table) return;
@@ -180,17 +218,15 @@ function addGlobalClosers() {
     var start = (page-1)*pageSize;
     var end = start + pageSize;
 
-    // Hide all first
     rows.forEach(function(r){ r.el.style.display = 'none'; });
 
-    // Append rows for the current page in the current sorted order
     var slice = filtered.slice(start, end);
     slice.forEach(function(r){
       r.el.style.display = '';
-      tbody.appendChild(r.el); // <-- this reorders the DOM
+      tbody.appendChild(r.el);
     });
 
-    // Page info
+    // Page info (x–y / total)
     var total = filtered.length;
     var from = Math.min(total, start+1);
     var to = Math.min(total, end);
@@ -205,7 +241,6 @@ function addGlobalClosers() {
     renderPage();
     updateSortBtns();
     updateFilterIndicators();
-
   }
 
   // -------- Header UI (sort + column popup) --------
@@ -225,18 +260,19 @@ function addGlobalClosers() {
       th.innerHTML = '';
       th.appendChild(wrap);
 
+      // Sort
       var sortBtn = document.createElement('button');
       sortBtn.type = 'button';
       sortBtn.className = 'fkhs-sort-btn';
-      sortBtn.title = 'Sort';
+      sortBtn.title = t('sort');
       sortBtn.textContent = '↕';
       sortBtn.addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         if (sortKey === key) {
-        sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
+          sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
         } else {
-        sortKey = key;
-        sortDir = (key === 'date') ? 'desc' : 'asc';
+          sortKey = key;
+          sortDir = (key === 'date') ? 'desc' : 'asc';
         }
         applyFilters();
         sortData();
@@ -246,25 +282,20 @@ function addGlobalClosers() {
       });
       wrap.appendChild(sortBtn);
 
-      // Always-visible filter "funnel" icon
-        var ficon = document.createElement('span');
-        ficon.className = 'fkhs-filter-icon';
-        ficon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"/></svg>';
-        wrap.appendChild(ficon);
+      // Alltid synlig filter-ikon
+      var ficon = document.createElement('span');
+      ficon.className = 'fkhs-filter-icon';
+      ficon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"/></svg>';
+      wrap.appendChild(ficon);
 
-        // Filter indicator dot (only when active)
-        var dot = document.createElement('span');
-        dot.className = 'fkhs-filter-dot';
-        wrap.appendChild(dot);
+      var dot = document.createElement('span');
+      dot.className = 'fkhs-filter-dot';
+      wrap.appendChild(dot);
 
-        // Start state
-        th.classList.add('fkhs-filter-inactive');
-        th.title = 'Click to filter';
-
-
+      th.classList.add('fkhs-filter-inactive');
+      th.title = t('clickToFilter');
 
       th.addEventListener('click', function(e){
-        // ignore if clicking the sort button itself
         if (e.target === sortBtn) return;
         openFilterPopup(th, key);
       });
@@ -287,89 +318,100 @@ function addGlobalClosers() {
       }
     });
   }
+
   function isColumnFiltered(key){
-  switch (key) {
-    case 'user': return !!filters.user;
-    case 'lesson': return !!filters.lesson;
-    case 'date': return !!filters.dateFrom || !!filters.dateTo;
-    case 'score': return filters.scoreCmp !== 'any' && filters.scoreVal !== '';
-    case 'criterion': return filters.critCmp !== 'any' && filters.critVal !== '';
-    case 'passed': return filters.passed !== 'any';
-    case 'completed': return filters.completed !== 'any';
-    default: return false;
-  }
-}
-
-function updateFilterIndicators(){
-  var table = document.getElementById(TABLE_ID);
-  if (!table) return;
-  $all('thead th', table).forEach(function(th){
-    var key = th.getAttribute('data-key');
-    var active = isColumnFiltered(key);
-    th.classList.toggle('fkhs-filter-active',  active);
-    th.classList.toggle('fkhs-filter-inactive', !active);
-    th.title = active ? 'Filtered – click to edit' : 'Click to filter';
-  });
-}
-
-
- function openFilterPopup(th, key) {
-  closePop();
-
-  var rect = th.getBoundingClientRect();
-  var pop = document.createElement('div');
-  pop.className = 'fkhs-pop';
-  pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
-  var left = Math.min(window.scrollX + rect.left, window.scrollX + (document.documentElement.clientWidth - 260));
-  pop.style.left = left + 'px';
-  pop.addEventListener('click', function(e){ e.stopPropagation(); });
-
-  var h = document.createElement('h4'); h.textContent = 'Filter'; pop.appendChild(h);
-  var content = document.createElement('div');
-
-  if (key === 'user' || key === 'lesson') {
-    content.appendChild(buildTextRow(key === 'user' ? 'User' : 'Lesson', key));
-  } else if (key === 'date') {
-    content.appendChild(buildDateRow());
-  } else if (key === 'score') {
-    content.appendChild(buildCompareRow('Score (%)', 'scoreCmp', 'scoreVal'));
-  } else if (key === 'criterion') {
-    content.appendChild(buildCompareRow('Criterion (%)', 'critCmp', 'critVal'));
-  } else if (key === 'passed') {
-    content.appendChild(buildYNRow('Passed', 'passed'));
-  } else if (key === 'completed') {
-    content.appendChild(buildYNRow('Completed', 'completed'));
-  } else {
-    var no = document.createElement('div'); no.className='fkhs-small'; no.textContent='No filter for this column.'; content.appendChild(no);
+    switch (key) {
+      case 'user': return !!filters.user;
+      case 'lesson': return !!filters.lesson;
+      case 'date': return !!filters.dateFrom || !!filters.dateTo;
+      case 'score': return filters.scoreCmp !== 'any' && filters.scoreVal !== '';
+      case 'criterion': return filters.critCmp !== 'any' && filters.critVal !== '';
+      case 'passed': return filters.passed !== 'any';
+      case 'completed': return filters.completed !== 'any';
+      default: return false;
+    }
   }
 
-  var actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='.5rem'; actions.style.justifyContent='flex-end'; actions.style.marginTop='.5rem';
-  var clearBtn = btn('Clear', function(){
-    clearFilterForKey(key);
-    updateFilterIndicators();   // <-- mark header state
-    rebuild();
+  function updateFilterIndicators(){
+    var table = document.getElementById(TABLE_ID);
+    if (!table) return;
+    $all('thead th', table).forEach(function(th){
+      var key = th.getAttribute('data-key');
+      var active = isColumnFiltered(key);
+      th.classList.toggle('fkhs-filter-active',  active);
+      th.classList.toggle('fkhs-filter-inactive', !active);
+      th.title = active ? t('filteredClickToEdit') : t('clickToFilter');
+    });
+  }
+
+  function openFilterPopup(th, key) {
     closePop();
-    removeGlobalClosers();
-  });
-  var applyBtn = btn('Apply', function(){
-    updateFilterIndicators();   // <-- mark header state
-    rebuild();
-    closePop();
-    removeGlobalClosers();
-  });
-  actions.append(clearBtn, applyBtn);
 
-  pop.appendChild(content);
-  pop.appendChild(actions);
-  document.body.appendChild(pop);
+    var rect = th.getBoundingClientRect();
+    var pop = document.createElement('div');
+    pop.className = 'fkhs-pop';
+    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    var left = Math.min(window.scrollX + rect.left, window.scrollX + (document.documentElement.clientWidth - 260));
+    pop.style.left = left + 'px';
+    pop.addEventListener('click', function(e){ e.stopPropagation(); });
 
-  openPop = pop;
-  popOpen = pop;
+    var h = document.createElement('h4');
+    h.textContent = t('filter');
+    pop.appendChild(h);
 
-  // legg på globale closers *etter* vi har rendret popupen
-  addGlobalClosers();
-}
+    var content = document.createElement('div');
 
+    if (key === 'user' || key === 'lesson') {
+      content.appendChild(buildTextRow(key === 'user' ? t('user') : t('lesson'), key));
+    } else if (key === 'date') {
+      content.appendChild(buildDateRow());
+    } else if (key === 'score') {
+      content.appendChild(buildCompareRow(t('scorePct'), 'scoreCmp', 'scoreVal'));
+    } else if (key === 'criterion') {
+      content.appendChild(buildCompareRow(t('criterionPct'), 'critCmp', 'critVal'));
+    } else if (key === 'passed') {
+      content.appendChild(buildYNRow(t('passed'), 'passed'));
+    } else if (key === 'completed') {
+      content.appendChild(buildYNRow(t('completed'), 'completed'));
+    } else {
+      var no = document.createElement('div');
+      no.className='fkhs-small';
+      no.textContent = t('noFilterForColumn');
+      content.appendChild(no);
+    }
+
+    var actions = document.createElement('div');
+    actions.style.display='flex';
+    actions.style.gap='.5rem';
+    actions.style.justifyContent='flex-end';
+    actions.style.marginTop='.5rem';
+
+    var clearBtn = btn(t('clear'), function(){
+      clearFilterForKey(key);
+      updateFilterIndicators();
+      rebuild();
+      closePop();
+      removeGlobalClosers();
+    });
+
+    var applyBtn = btn(t('apply'), function(){
+      updateFilterIndicators();
+      rebuild();
+      closePop();
+      removeGlobalClosers();
+    });
+
+    actions.append(clearBtn, applyBtn);
+
+    pop.appendChild(content);
+    pop.appendChild(actions);
+    document.body.appendChild(pop);
+
+    openPop = pop;
+    popOpen = pop;
+
+    addGlobalClosers();
+  }
 
   function clearFilterForKey(key){
     if (key === 'user') filters.user = '';
@@ -387,61 +429,91 @@ function updateFilterIndicators(){
     var label = document.createElement('label'); label.textContent = labelText; label.className='fkhs-small';
     var input = document.createElement('input'); input.type='text'; input.className='fkhs-input';
     input.value = (which === 'user') ? filters.user : filters.lesson;
-    input.addEventListener('input', function(e){ if (which==='user') filters.user=e.target.value.trim(); else filters.lesson=e.target.value.trim(); });
+    input.addEventListener('input', function(e){
+      if (which==='user') filters.user=e.target.value.trim(); else filters.lesson=e.target.value.trim();
+    });
     wrap.append(label, input); return wrap;
   }
+
   function buildDateRow(){
     var wrap = document.createElement('div');
-    var l = document.createElement('div'); l.textContent='Date range'; l.className='fkhs-small';
+    var l = document.createElement('div'); l.textContent=t('dateRange'); l.className='fkhs-small';
     var r = document.createElement('div'); r.className='row';
     var from = document.createElement('input'); from.type='date'; from.className='fkhs-input'; from.value=filters.dateFrom; from.addEventListener('change', function(e){ filters.dateFrom=e.target.value; });
     var to = document.createElement('input'); to.type='date'; to.className='fkhs-input'; to.value=filters.dateTo; to.addEventListener('change', function(e){ filters.dateTo=e.target.value; });
     r.append(from,to); wrap.append(l,r); return wrap;
   }
+
   function buildCompareRow(labelText, cmpKey, valKey){
     var wrap = document.createElement('div');
     var l = document.createElement('div'); l.textContent=labelText; l.className='fkhs-small';
     var r = document.createElement('div'); r.className='row';
     var sel = document.createElement('select'); sel.className='fkhs-select';
-    [['any','Any'],['ge','≥'],['le','≤']].forEach(function(p){ var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o); });
+    [['any', t('any')], ['ge','≥'], ['le','≤']].forEach(function(p){
+      var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o);
+    });
     sel.value = filters[cmpKey]; sel.addEventListener('change', function(e){ filters[cmpKey]=e.target.value; });
     var num = document.createElement('input'); num.type='number'; num.className='fkhs-input'; num.min='0'; num.max='100'; num.step='1'; num.placeholder='%'; num.value=filters[valKey];
     num.addEventListener('input', function(e){ filters[valKey]=e.target.value; });
     r.append(sel,num); wrap.append(l,r); return wrap;
   }
+
   function buildYNRow(labelText, key){
     var wrap = document.createElement('div');
     var l = document.createElement('div'); l.textContent=labelText; l.className='fkhs-small';
     var r = document.createElement('div'); r.className='row';
     var sel = document.createElement('select'); sel.className='fkhs-select';
-    [['any','Any'],['yes','Yes'],['no','No']].forEach(function(p){ var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o); });
+    [['any', t('any')], ['yes', t('yes')], ['no', t('no')]].forEach(function(p){
+      var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o);
+    });
     sel.value = filters[key]; sel.addEventListener('change', function(e){ filters[key]=e.target.value; });
     r.append(sel); wrap.append(l,r); return wrap;
   }
+
   function btn(label, onClick){
-    var b = document.createElement('button'); b.type='button'; b.className='fkhs-btn'; b.textContent=label; b.addEventListener('click', onClick); return b;
+    var b = document.createElement('button');
+    b.type='button';
+    b.className='fkhs-btn';
+    b.textContent=label;
+    b.addEventListener('click', onClick);
+    return b;
   }
 
   function buildPagination() {
     var bar = document.createElement('div');
     bar.className = 'fkhs-pagination';
 
-    var reset = btn('Reset filters', function(){
+    var reset = btn(t('resetFilters'), function(){
       filters = { user:'', lesson:'', dateFrom:'', dateTo:'', scoreCmp:'any', scoreVal:'', critCmp:'any', critVal:'', passed:'any', completed:'any' };
       rebuild();
     });
 
-    var prev = btn('‹ Prev', function(){ if (page > 1) { page--; renderPage(); } });
-    var info = document.createElement('span'); info.id='fkhs-page-info'; info.className='fkhs-pill';
-    var next = btn('Next ›', function(){
+    var prev = btn('‹ ' + t('prev'), function(){
+      if (page > 1) { page--; renderPage(); }
+    });
+
+    var info = document.createElement('span');
+    info.id='fkhs-page-info';
+    info.className='fkhs-pill';
+
+    var next = btn(t('next') + ' ›', function(){
       var total = filtered.length; var pages = Math.max(1, Math.ceil(total/pageSize));
       if (page < pages) { page++; renderPage(); }
     });
 
-    var sizeSel = document.createElement('select'); sizeSel.className='fkhs-select';
-    PAGE_SIZES.forEach(function(s){ var o=document.createElement('option'); o.value=String(s); o.textContent='Rows: '+s; sizeSel.appendChild(o); });
+    var sizeSel = document.createElement('select');
+    sizeSel.className='fkhs-select';
+    PAGE_SIZES.forEach(function(s){
+      var o=document.createElement('option'); o.value=String(s);
+      o.textContent = t('rowsLabel').replace('%d', s);
+      sizeSel.appendChild(o);
+    });
     sizeSel.value = String(pageSize);
-    sizeSel.addEventListener('change', function(e){ pageSize = parseInt(e.target.value,10)||50; page=1; renderPage(); });
+    sizeSel.addEventListener('change', function(e){
+      pageSize = parseInt(e.target.value,10)||50;
+      page=1;
+      renderPage();
+    });
 
     bar.append(reset, prev, info, next, sizeSel);
 
