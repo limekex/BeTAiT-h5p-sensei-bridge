@@ -1,0 +1,21 @@
+name: Build plugin on tag
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prepare zip
+        run: |
+          mkdir dist
+          zip -r "dist/betait-spfy-${GITHUB_REF_NAME}.zip" \
+            . -x ".git/*" ".github/*" "node_modules/*" ".DS_Store"
+      - name: Upload artifact to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
