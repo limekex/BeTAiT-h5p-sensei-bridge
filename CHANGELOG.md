@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog] and this project adheres to [Semantic Versioning].
 
 ## [Unreleased]
-- (add here)
+- a lot of stuff
 
-## [v1.0.0] - YYYY-MM-DD
+## [v1.0.0] - 2025-09-25
 ### Added
 - Initial release
 
