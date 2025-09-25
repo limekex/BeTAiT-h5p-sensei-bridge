@@ -1,0 +1,24 @@
+# macOS / VS Code
+.DS_Store
+.vscode/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+
+# WordPress
+wp-content/cache/
+wp-content/uploads/*
+!wp-content/uploads/.gitkeep
+wp-content/advanced-cache.php
+wp-content/backup-db/
+wp-content/backups/
+wp-content/blogs.dir/
+wp-content/upgrade/
+wp-content/wp-cache-config.php
+wp-content/plugins/*/vendor/
+
+# Build/output
+dist/
+build/

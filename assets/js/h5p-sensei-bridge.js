@@ -1,5 +1,8 @@
 (function () {
   'use strict';
+  // Global “gate”-status vi bruker overalt
+  var fkhsGatePassed = false;
+
 
   // Generic style injector (prevents duplicates by id)
   function injectStyle(id, css){
@@ -110,6 +113,7 @@ injectStyle('fkhs-bridge-status-css', `
         if (!passed && typeof raw === 'number' && typeof max === 'number' && max > 0) {
           passed = (raw / max) * 100 >= (window.fkH5P?.threshold || 70);
         }
+        fkhsGatePassed = !!passed;
         setQuizButtonVisibility(passed);
         fetchAndRenderH5PStatus();
       })
@@ -648,86 +652,109 @@ function setQuizButtonVisibility(passed) {
   // On load: be conservative; hide quiz CTA until passed.
     document.addEventListener('DOMContentLoaded', function(){
       if (window.fkH5P?.debug) console.debug('[FKHS] boot', window.fkH5P);
-      setQuizButtonVisibility(false);
 
-      // Fange dynamiske endringer (Gutenberg-blocks, SPA-tema etc.)
+      // start konservativt (låst) til vi har status
+      fkhsGatePassed = false;
+      setQuizButtonVisibility(fkhsGatePassed);
+
+      // Ved DOM-endringer: behold nåværende sannhet, ikke hardkode false
       var mo = new MutationObserver(function(){
-        // Hold knappen i riktig state hver gang DOM endres
-        // (vi antar “ikke bestått” til vi får xAPI)
-        setQuizButtonVisibility(false);
+        setQuizButtonVisibility(fkhsGatePassed);
       });
       mo.observe(document.body, { childList: true, subtree: true });
 
-      // HENT STATUS + vis badges
+      // Hent status
       fetchAndRenderH5PStatus();
     });
 
-    function fetchAndRenderH5PStatus(){
-    try {
-      var url = (window.fkH5P?.restUrl || '').replace(/\/h5p-xapi$/, '/h5p-status');
-      var q = '?lesson_id=' + encodeURIComponent(window.fkH5P?.lessonId || 0);
-      fetch(url + q, {
-        method: 'GET',
-        headers: { 'X-WP-Nonce': window.fkH5P?.nonce }
-      }).then(function(r){ return r.json(); }).then(function(json){
-        if (!json?.ok || !Array.isArray(json.items)) return;
-          json.items.forEach(function(item){
-            var cid       = item.content_id;
-            var latest    = item.latest || {};
-            var best      = item.best || {};
-            var threshold = item.threshold;
 
-            // beregn prosenter
-          var latestPct = (typeof latest.pct === 'number') ? latest.pct :
-            ((typeof latest.raw === 'number' && typeof latest.max === 'number' && latest.max > 0) ? (latest.raw/latest.max)*100 : null);
-          var bestPct = (typeof best.pct === 'number') ? best.pct :
-            ((typeof best.raw === 'number' && typeof best.max === 'number' && best.max > 0) ? (best.raw/best.max)*100 : null);
+function fetchAndRenderH5PStatus(){
+  try {
+    var url = (window.fkH5P?.restUrl || '').replace(/\/h5p-xapi$/, '/h5p-status');
+    var q = '?lesson_id=' + encodeURIComponent(window.fkH5P?.lessonId || 0);
 
-          var bestPasses   = (typeof bestPct === 'number') && (bestPct >= threshold);
-          var latestPasses = !!latest.passed;
+    fetch(url + q, {
+      method: 'GET',
+      headers: { 'X-WP-Nonce': window.fkH5P?.nonce }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(json){
+      if (!json?.ok || !Array.isArray(json.items)) return;
 
-          // bygg tekster – inkluder både råscore og % når tilgjengelig
-          var useRaw = (typeof best.raw === 'number' ? best.raw : latest.raw);
-          var useMax = (typeof best.max === 'number' ? best.max : latest.max);
-          var usePct = (typeof bestPct === 'number' ? bestPct : latestPct);
+      // Anta at alt er bestått til vi finner en som ikke er det
+      var overallPassed = true;
 
-          var passedTxt = (window.fkH5P?.i18n?.overlayPassed || 'This task is passed: %1$s / %2$s points (accepted).')
-            .replace('%1$s', format(useRaw))
-            .replace('%2$s', format(useMax));
-          if (typeof usePct === 'number') passedTxt += ' (' + formatPct(usePct) + ')';
+      json.items.forEach(function(item){
+        var cid       = item.content_id;
+        var latest    = item.latest || {};
+        var best      = item.best || {};
+        var threshold = item.threshold;
 
-          var failTxt = (window.fkH5P?.i18n?.overlayNotPassed || 'Taken earlier, not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.')
-            .replace('%1$s', format(best.raw))
-            .replace('%2$s', format(best.max))
-            .replace('%3$s', formatPct(threshold));
-          if (typeof bestPct === 'number') failTxt = failTxt.replace('Best score:', 'Best score ('+ formatPct(bestPct) + '):');
+        // Prosent
+        var latestPct = (typeof latest.pct === 'number')
+          ? latest.pct
+          : ((typeof latest.raw === 'number' && typeof latest.max === 'number' && latest.max > 0)
+              ? (latest.raw/latest.max)*100 : null);
 
+        var bestPct = (typeof best.pct === 'number')
+          ? best.pct
+          : ((typeof best.raw === 'number' && typeof best.max === 'number' && best.max > 0)
+              ? (best.raw/best.max)*100 : null);
 
-          // Finn containere for denne H5P'en
-          var targets = findH5PContainersById(cid);
-          if (!targets.length) return;
+        var bestPasses   = (typeof bestPct === 'number') && (bestPct >= threshold);
+        var latestPasses = !!latest.passed;
 
-          // Badge + overlayregler:
-          //  - Hvis best forsøk er bestått → grønn badge + overlay som kan lukkes
-          //  - Ellers → rød badge + overlay som MÅ “retry now” for å starte
-           targets.forEach(function(t){
-             if (bestPasses || latestPasses) {
-               attachBadge(t, passedTxt, 'pass');
-               if (t.dataset.fkhsDismissed !== '1') {
-                 attachOverlay(t, 'pass', 'Task passed', passedTxt, {});
-               }
-             } else {
-               attachBadge(t, failTxt, 'fail', function(){
-                 t.scrollIntoView({ behavior:'smooth', block:'center' });
-               });
-               attachOverlay(t, 'fail', 'Not passed yet', failTxt, {});
-             }
-           });
-          });
-          renderStatusPanelFromItems(json.items);
+        // Oppdater totalstatus
+        if (!(bestPasses || latestPasses)) overallPassed = false;
 
-      }).catch(function(){});
-    } catch(e){}
+        // Tekst (vis både råscore og prosent når mulig)
+        var useRaw = (typeof best.raw === 'number' ? best.raw : latest.raw);
+        var useMax = (typeof best.max === 'number' ? best.max : latest.max);
+        var usePct = (typeof bestPct === 'number' ? bestPct : latestPct);
+
+        var passedTxt = (window.fkH5P?.i18n?.overlayPassed || 'This task is passed: %1$s / %2$s points (accepted).')
+          .replace('%1$s', format(useRaw))
+          .replace('%2$s', format(useMax));
+        if (typeof usePct === 'number') passedTxt += ' (' + formatPct(usePct) + ')';
+
+        var failTxt = (window.fkH5P?.i18n?.overlayNotPassed || 'Taken earlier, not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.')
+          .replace('%1$s', format(best.raw))
+          .replace('%2$s', format(best.max))
+          .replace('%3$s', formatPct(threshold));
+        if (typeof bestPct === 'number') {
+          failTxt = failTxt.replace('Best score:', 'Best score (' + formatPct(bestPct) + '):');
+        }
+
+        // Målcontainere for denne H5P-en
+        var targets = findH5PContainersById(cid);
+        if (!targets.length) return;
+
+        // Badge + overlay
+        targets.forEach(function(t){
+          if (bestPasses || latestPasses) {
+            attachBadge(t, passedTxt, 'pass');
+            if (t.dataset.fkhsDismissed !== '1') {
+              attachOverlay(t, 'pass', 'Task passed', passedTxt, {});
+            }
+          } else {
+            attachBadge(t, failTxt, 'fail', function(){
+              t.scrollIntoView({ behavior:'smooth', block:'center' });
+            });
+            attachOverlay(t, 'fail', 'Not passed yet', failTxt, {});
+          }
+        });
+      });
+
+      // Oppdater knappelås basert på totalstatus
+      fkhsGatePassed = overallPassed;                 // global sannhet
+      setQuizButtonVisibility(fkhsGatePassed);        // åpne/lukke CTA
+
+      // Panel under knappene
+      renderStatusPanelFromItems(json.items);
+    })
+    .catch(function(){});
+  } catch(e){}
 }
+
   bind();
 })();
