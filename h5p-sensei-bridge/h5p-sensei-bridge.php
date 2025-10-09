@@ -38,6 +38,7 @@ define( 'FKHS_DB_VER', '0.2.0' );                    // DB schema version for at
  * -------------------------------------------------------------------------
  */
 require_once FKHS_DIR . 'includes/class-fkhs-plugin.php';
+require_once FKHS_DIR . 'includes/class-fkhs-helpers.php';
 require_once FKHS_DIR . 'includes/class-fkhs-rest.php';
 require_once FKHS_DIR . 'includes/class-fkhs-sensei.php';
 require_once FKHS_DIR . 'includes/class-fkhs-reporter.php';

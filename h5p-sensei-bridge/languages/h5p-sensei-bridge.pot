@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-09-25T10:18:06+02:00\n"
+"POT-Creation-Date: 2025-09-25T11:34:56+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: h5p-sensei-bridge\n"
@@ -53,56 +53,64 @@ msgstr ""
 msgid "Place the H5P activity inside the lesson content. The bridge captures xAPI results and checks this requirement when the lesson is being completed."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:170
+#: includes/class-fkhs-plugin.php:174
 msgid "Complete the H5P first"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:171
+#: includes/class-fkhs-plugin.php:175
 msgid "You need to pass the in-lesson tasks before you can take the quiz."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:172
+#: includes/class-fkhs-plugin.php:176
 msgid "You need to pass the in-lesson tasks before you can complete the lesson."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:173
+#: includes/class-fkhs-plugin.php:177
 msgid "This task is passed: %1$s / %2$s points (accepted)."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:174
+#: includes/class-fkhs-plugin.php:178
 msgid "Taken earlier, not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:175
+#: includes/class-fkhs-plugin.php:179
 msgid "Practice again"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:176
+#: includes/class-fkhs-plugin.php:180
 msgid "Retry now"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:179
+#: includes/class-fkhs-plugin.php:182
 msgid "Lesson tasks status"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:180
+#: includes/class-fkhs-plugin.php:183
 msgid "All tasks are passed. You can continue."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:181
+#: includes/class-fkhs-plugin.php:184
 msgid "%1$d of %2$d tasks passed"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:182
+#: includes/class-fkhs-plugin.php:185
 msgid "Remaining:"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:183
+#: includes/class-fkhs-plugin.php:186
 msgid "View task"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:184
+#: includes/class-fkhs-plugin.php:187
 msgid "%1$s — best %2$s, required %3$s"
+msgstr ""
+
+#: includes/class-fkhs-plugin.php:188
+msgid "Task passed"
+msgstr ""
+
+#: includes/class-fkhs-plugin.php:189
+msgid "Not passed yet"
 msgstr ""
 
 #: includes/class-fkhs-reporter.php:38
@@ -110,48 +118,120 @@ msgstr ""
 msgid "H5P → Sensei"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:95
-msgid "H5P → Sensei (latest attempts)"
+#: includes/class-fkhs-reporter.php:85
+msgid "Sort"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:100
-msgid "Date"
+#: includes/class-fkhs-reporter.php:86
+msgid "Click to filter"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:101
+#: includes/class-fkhs-reporter.php:87
+msgid "Filtered – click to edit"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:88
+msgid "Filter"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:89
+#: includes/class-fkhs-reporter.php:148
 msgid "User"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:102
+#: includes/class-fkhs-reporter.php:90
+#: includes/class-fkhs-reporter.php:149
 msgid "Lesson"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:103
-msgid "H5P Content"
+#: includes/class-fkhs-reporter.php:91
+msgid "Date range"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:104
-msgid "Score"
+#: includes/class-fkhs-reporter.php:92
+msgid "Score (%)"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:105
-msgid "Criterion"
+#: includes/class-fkhs-reporter.php:93
+msgid "Criterion (%)"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:106
+#: includes/class-fkhs-reporter.php:94
+#: includes/class-fkhs-reporter.php:153
 msgid "Passed"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:107
+#: includes/class-fkhs-reporter.php:95
+#: includes/class-fkhs-reporter.php:154
 msgid "Completed"
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:113
+#: includes/class-fkhs-reporter.php:96
+msgid "No filter for this column."
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:97
+msgid "Clear"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:98
+msgid "Apply"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:99
+msgid "Reset filters"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:100
+msgid "Prev"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:101
+msgid "Next"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:102
+msgid "Rows: %d"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:103
+msgid "Any"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:104
+msgid "Yes"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:105
+msgid "No"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:142
+msgid "H5P → Sensei (latest attempts)"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:147
+msgid "Date"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:150
+msgid "H5P Content"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:151
+msgid "Score"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:152
+msgid "Criterion"
+msgstr ""
+
+#: includes/class-fkhs-reporter.php:160
 msgid "No data yet."
 msgstr ""
 
 #. translators: %d: number of rows displayed in the report.
-#: includes/class-fkhs-reporter.php:217
+#: includes/class-fkhs-reporter.php:264
 msgid "Showing the latest %d attempts."
 msgstr ""
 
