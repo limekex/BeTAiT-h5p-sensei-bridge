@@ -117,154 +117,164 @@ class FKHS_Reporter {
 	 *
 	 * @return void
 	 */
-	public static function render() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
+		public static function render() {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
 
-		global $wpdb;
-		$table = $wpdb->prefix . FKHS_TABLE;
+			global $wpdb;
+			$table = $wpdb->prefix . FKHS_TABLE;
 
-		/**
-		 * Filter the number of rows to show in the report.
-		 *
-		 * @param int $limit Default 200.
-		 */
-		$limit = (int) apply_filters( 'fkhs_report_limit', 200 );
-		if ( $limit < 1 ) {
-			$limit = 200;
-		}
+			/**
+			 * Filter the number of rows to show in the report.
+			 *
+			 * @param int $limit Default 200.
+			 */
+			$limit = (int) apply_filters( 'fkhs_report_limit', 200 );
+			if ( $limit < 1 ) {
+				$limit = 200;
+			}
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $limit is cast int above.
-		$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT {$limit}", ARRAY_A );
-		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'H5P → Sensei (latest attempts)', 'h5p-sensei-bridge' ); ?></h1>
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $limit is cast int above.
+			$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT {$limit}", ARRAY_A );
+			?>
+			<div class="wrap">
+				<h1><?php esc_html_e( 'H5P → Sensei (latest attempts)', 'h5p-sensei-bridge' ); ?></h1>
 
-			<table id="fkhs-report-table" class="widefat striped">
-				<thead>
-					<tr>	
-						<th data-key="date"><?php esc_html_e( 'Date', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="user"><?php esc_html_e( 'User', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="lesson"><?php esc_html_e( 'Lesson', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="h5p"><?php esc_html_e( 'H5P Content', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="score"><?php esc_html_e( 'Score', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="criterion"><?php esc_html_e( 'Criterion', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="passed"><?php esc_html_e( 'Passed', 'h5p-sensei-bridge' ); ?></th>
-						<th data-key="completed"><?php esc_html_e( 'Completed', 'h5p-sensei-bridge' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php if ( empty( $rows ) ) : ?>
-					<tr>
-						<td colspan="8"><?php esc_html_e( 'No data yet.', 'h5p-sensei-bridge' ); ?></td>
-					</tr>
-				<?php
-				else :
-					foreach ( $rows as $r ) :
-						$user_id     = (int) $r['user_id'];
-						$user        = get_user_by( 'id', $user_id );
-						$lesson_id   = (int) $r['lesson_id'];
-						$lesson_link = get_edit_post_link( $lesson_id );
-						$threshold   = (float) get_post_meta( $lesson_id, '_fkhs_pass_threshold', true );
-						if ( ! $threshold ) {
-							$threshold = 70.0;
-						}
-
-						// Lesson title: prefer stored snapshot; fall back to current live title.
-						$stored_title = isset( $r['lesson_title'] ) ? trim( (string) $r['lesson_title'] ) : '';
-						$live_title   = get_the_title( $lesson_id );
-						$lesson_title = $stored_title ?: ( $live_title ?: '—' );
-
-						// H5P metadata lookup (safe on multisite/prefix).
-						$content_id = ! empty( $r['content_id'] ) ? (int) $r['content_id'] : 0;
-						$h5p_title  = '—';
-						$h5p_type   = '—';
-						$h5p_link   = '';
-
-						if ( $content_id ) {
-							$c_table = $wpdb->prefix . 'h5p_contents';
-							$l_table = $wpdb->prefix . 'h5p_libraries';
-
-							$h5p = $wpdb->get_row(
-								$wpdb->prepare(
-									"SELECT c.id, c.title, l.name, l.major_version, l.minor_version
-									 FROM {$c_table} c
-									 LEFT JOIN {$l_table} l ON l.id = c.library_id
-									 WHERE c.id = %d",
-									$content_id
-								),
-								ARRAY_A
-							);
-
-							if ( $h5p ) {
-								$lib_name   = isset( $h5p['name'] ) ? (string) $h5p['name'] : '';
-								$lib_major  = isset( $h5p['major_version'] ) ? (int) $h5p['major_version'] : 0;
-								$lib_minor  = isset( $h5p['minor_version'] ) ? (int) $h5p['minor_version'] : 0;
-								$h5p_type   = $lib_name ? sprintf( '%s %d.%d', $lib_name, $lib_major, $lib_minor ) : '—';
-								$h5p_title  = ! empty( $h5p['title'] ) ? (string) $h5p['title'] : '—';
-								$h5p_link   = admin_url( 'admin.php?page=h5p&task=edit&id=' . $content_id );
-							}
-						}
-
-						$raw = is_null( $r['raw_score'] ) ? '—' : (float) $r['raw_score'];
-						$max = is_null( $r['max_score'] ) ? '—' : (float) $r['max_score'];
-						?>
-						<tr
-							data-date-iso="<?php echo esc_attr( gmdate( 'Y-m-d\TH:i:s', strtotime( $r['created_at'] ) ) ); ?>"
-							data-user="<?php echo esc_attr( $user ? $user->user_login : ( '#' . (int) $r['user_id'] ) ); ?>"
-							data-lesson-title="<?php echo esc_attr( $lesson_title ); ?>"
-							data-score-raw="<?php echo esc_attr( is_null( $r['raw_score'] ) ? '' : (float) $r['raw_score'] ); ?>"
-							data-score-max="<?php echo esc_attr( is_null( $r['max_score'] ) ? '' : (float) $r['max_score'] ); ?>"
-							data-criterion="<?php echo esc_attr( $threshold ); ?>"
-							data-passed="<?php echo esc_attr( ! empty( $r['passed'] ) ? '1' : '0' ); ?>"
-							data-completed="<?php echo esc_attr( ! empty( $r['completed'] ) ? '1' : '0' ); ?>"
-							>
-							<td><?php echo esc_html( $r['created_at'] ); ?></td>
-							<td><?php echo $user ? esc_html( $user->user_login ) : esc_html( '#' . $user_id ); ?></td>
-							<td>
-								<?php if ( $lesson_link ) : ?>
-									<a href="<?php echo esc_url( $lesson_link ); ?>">
-										<?php echo esc_html( $lesson_title ); ?>
-									</a>
-								<?php else : ?>
-									<?php echo esc_html( $lesson_title ); ?>
-								<?php endif; ?>
-							</td>
-							<td>
-								<?php
-								if ( $h5p_link ) {
-									// Example: "My Interactive (H5P.InteractiveVideo 1.26)".
-									printf(
-										'<a href="%1$s">%2$s (%3$s)</a>',
-										esc_url( $h5p_link ),
-										esc_html( $h5p_title ),
-										esc_html( $h5p_type )
-									);
-								} else {
-									echo '—';
-								}
-								?>
-							</td>
-							<td><?php echo esc_html( is_string( $raw ) || is_string( $max ) ? "{$raw} / {$max}" : ( $raw . ' / ' . $max ) ); ?></td>
-							<td><?php echo esc_html( $threshold ) . '%'; ?></td>
-							<td><?php echo ! empty( $r['passed'] ) ? '✓' : '–'; // Symbols kept simple on purpose. ?></td>
-							<td><?php echo ! empty( $r['completed'] ) ? '✓' : '–'; ?></td>
+				<table id="fkhs-report-table" class="widefat striped">
+					<thead>
+						<tr>
+							<th data-key="date"><?php esc_html_e( 'Date', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="user"><?php esc_html_e( 'User', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="lesson"><?php esc_html_e( 'Lesson', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="h5p"><?php esc_html_e( 'H5P Content', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="score"><?php esc_html_e( 'Score', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="criterion"><?php esc_html_e( 'Criterion', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="passed"><?php esc_html_e( 'Passed', 'h5p-sensei-bridge' ); ?></th>
+							<th data-key="completed"><?php esc_html_e( 'Completed', 'h5p-sensei-bridge' ); ?></th>
 						</tr>
-						<?php
-					endforeach;
-				endif;
-				?>
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+					<?php if ( empty( $rows ) ) : ?>
+						<tr>
+							<td colspan="8"><?php esc_html_e( 'No data yet.', 'h5p-sensei-bridge' ); ?></td>
+						</tr>
+					<?php
+					else :
+						foreach ( $rows as $r ) :
+							$user_id     = (int) $r['user_id'];
+							$user        = get_user_by( 'id', $user_id );
+							$lesson_id   = (int) $r['lesson_id'];
+							$lesson_link = get_edit_post_link( $lesson_id );
 
-			<p class="description">
-				<?php
-				/* translators: %d: number of rows displayed in the report. */
-				printf( esc_html__( 'Showing the latest %d attempts.', 'h5p-sensei-bridge' ), (int) $limit );
-				?>
-			</p>
-		</div>
-		<?php
-	}
+							// Lesson title: prefer stored snapshot; fall back to current live title.
+							$stored_title = isset( $r['lesson_title'] ) ? trim( (string) $r['lesson_title'] ) : '';
+							$live_title   = get_the_title( $lesson_id );
+							$lesson_title = $stored_title ?: ( $live_title ?: '—' );
+
+							// H5P metadata lookup (safe on multisite/prefix).
+							$content_id = ! empty( $r['content_id'] ) ? (int) $r['content_id'] : 0;
+							$h5p_title  = '—';
+							$h5p_type   = '—';
+							$h5p_link   = '';
+
+							if ( $content_id ) {
+								$c_table = $wpdb->prefix . 'h5p_contents';
+								$l_table = $wpdb->prefix . 'h5p_libraries';
+
+								$h5p = $wpdb->get_row(
+									$wpdb->prepare(
+										"SELECT c.id, c.title, l.name, l.major_version, l.minor_version
+										FROM {$c_table} c
+										LEFT JOIN {$l_table} l ON l.id = c.library_id
+										WHERE c.id = %d",
+										$content_id
+									),
+									ARRAY_A
+								);
+
+								if ( $h5p ) {
+									$lib_name   = isset( $h5p['name'] ) ? (string) $h5p['name'] : '';
+									$lib_major  = isset( $h5p['major_version'] ) ? (int) $h5p['major_version'] : 0;
+									$lib_minor  = isset( $h5p['minor_version'] ) ? (int) $h5p['minor_version'] : 0;
+									$h5p_type   = $lib_name ? sprintf( '%s %d.%d', $lib_name, $lib_major, $lib_minor ) : '—';
+									$h5p_title  = ! empty( $h5p['title'] ) ? (string) $h5p['title'] : '—';
+									$h5p_link   = admin_url( 'admin.php?page=h5p&task=edit&id=' . $content_id );
+								}
+							}
+
+							// Use the same "effective threshold" logic as the frontend/REST.
+							$eff_threshold = FKHS_Thresholds::get_effective_threshold(
+								(int) $lesson_id,
+								$content_id ?: null,
+								(int) $user_id
+							);
+							$eff_threshold = is_numeric( $eff_threshold ) ? (float) $eff_threshold : 0.0;
+
+							// Display label: "Completion only" if 0, otherwise "N%".
+							$criterion_label = ( $eff_threshold > 0 )
+								? ( $eff_threshold . '%' )
+								: __( 'Completion only', 'h5p-sensei-bridge' );
+
+							$raw = is_null( $r['raw_score'] ) ? '—' : (float) $r['raw_score'];
+							$max = is_null( $r['max_score'] ) ? '—' : (float) $r['max_score'];
+							?>
+							<tr
+								data-date-iso="<?php echo esc_attr( gmdate( 'Y-m-d\TH:i:s', strtotime( $r['created_at'] ) ) ); ?>"
+								data-user="<?php echo esc_attr( $user ? $user->user_login : ( '#' . (int) $r['user_id'] ) ); ?>"
+								data-lesson-title="<?php echo esc_attr( $lesson_title ); ?>"
+								data-score-raw="<?php echo esc_attr( is_null( $r['raw_score'] ) ? '' : (float) $r['raw_score'] ); ?>"
+								data-score-max="<?php echo esc_attr( is_null( $r['max_score'] ) ? '' : (float) $r['max_score'] ); ?>"
+								data-criterion="<?php echo esc_attr( $eff_threshold ); ?>"
+								data-passed="<?php echo esc_attr( ! empty( $r['passed'] ) ? '1' : '0' ); ?>"
+								data-completed="<?php echo esc_attr( ! empty( $r['completed'] ) ? '1' : '0' ); ?>"
+							>
+								<td><?php echo esc_html( $r['created_at'] ); ?></td>
+								<td><?php echo $user ? esc_html( $user->user_login ) : esc_html( '#' . $user_id ); ?></td>
+								<td>
+									<?php if ( $lesson_link ) : ?>
+										<a href="<?php echo esc_url( $lesson_link ); ?>">
+											<?php echo esc_html( $lesson_title ); ?>
+										</a>
+									<?php else : ?>
+										<?php echo esc_html( $lesson_title ); ?>
+									<?php endif; ?>
+								</td>
+								<td>
+									<?php
+									if ( $h5p_link ) {
+										// Example: "My Interactive (H5P.InteractiveVideo 1.26)".
+										printf(
+											'<a href="%1$s">%2$s (%3$s)</a>',
+											esc_url( $h5p_link ),
+											esc_html( $h5p_title ),
+											esc_html( $h5p_type )
+										);
+									} else {
+										echo '—';
+									}
+									?>
+								</td>
+								<td><?php echo esc_html( is_string( $raw ) || is_string( $max ) ? "{$raw} / {$max}" : ( $raw . ' / ' . $max ) ); ?></td>
+								<td><?php echo esc_html( $criterion_label ); ?></td>
+								<td><?php echo ! empty( $r['passed'] ) ? '✓' : '–'; ?></td>
+								<td><?php echo ! empty( $r['completed'] ) ? '✓' : '–'; ?></td>
+							</tr>
+							<?php
+						endforeach;
+					endif;
+					?>
+					</tbody>
+				</table>
+
+				<p class="description">
+					<?php
+					/* translators: %d: number of rows displayed in the report. */
+					printf( esc_html__( 'Showing the latest %d attempts.', 'h5p-sensei-bridge' ), (int) $limit );
+					?>
+				</p>
+			</div>
+			<?php
+		}
+
 }

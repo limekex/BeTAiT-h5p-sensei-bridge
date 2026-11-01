@@ -1,0 +1,29 @@
+name: Bridge regression checks
+on:
+  pull_request:
+  push:
+    branches: [main, develop, 'review/**']
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP syntax
+        run: find h5p-sensei-bridge tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: JavaScript syntax
+        run: |
+          node --check h5p-sensei-bridge/assets/js/h5p-sensei-bridge.js
+          node --check h5p-sensei-bridge/assets/js/h5p-sensei-admin-report.js
+      - name: Regression tests
+        run: |
+          php tests/progress.php
+          node --test tests/gate.test.cjs
