@@ -4,8 +4,8 @@
  *
  * Responsibilities:
  * - Never auto-complete lessons from H5P (Sensei owns completion).
- * - Veto completion via 'sensei_user_lesson_end' when "Require H5P pass"
- *   is enabled on the lesson and the user hasn't reached the threshold.
+ * - Veto completion via 'sensei_user_lesson_end' when the shared
+ *   per-activity progress policy has unmet requirements.
  * - Gate quiz access until the H5P requirement is satisfied.
  * - Show lightweight front-end notices on redirect (optional UX sugar).
  *
@@ -102,12 +102,6 @@ class FKHS_Sensei {
 			}
 		}
 
-		// Only apply when the lesson explicitly requires H5P pass.
-		$require_h5p = (bool) get_post_meta( $lesson_id, '_fkhs_require_h5p_pass', true );
-		if ( ! $require_h5p ) {
-			return;
-		}
-
 		// Has the user passed according to our stored attempts/threshold?
 		if ( self::user_has_passed_h5p( $user_id, $lesson_id ) ) {
 			return; // OK to complete.
@@ -129,57 +123,16 @@ class FKHS_Sensei {
 
 	/**
 	 * Determine if the user has passed the H5P requirement for a lesson
-	 * using the latest stored attempt and current (server-side) threshold.
+	 * using the same per-item policy as the REST status response.
 	 *
 	 * @param int $user_id   User ID.
 	 * @param int $lesson_id Lesson ID.
 	 * @return bool
 	 */
 	public static function user_has_passed_h5p( int $user_id, int $lesson_id ): bool {
-		global $wpdb;
-		$table     = $wpdb->prefix . FKHS_TABLE;
-		$threshold = (float) get_post_meta( $lesson_id, '_fkhs_pass_threshold', true );
-		if ( ! $threshold ) { $threshold = 70.0; }
-
-		$content_ids = self::get_h5p_ids_for_lesson( $lesson_id );
-		if ( empty( $content_ids ) ) {
-			return true; // ingen H5P i leksjonen
-		}
-
-		foreach ( $content_ids as $cid ) {
-			// "Beste" forsøk: først alle som er passert, deretter høyest score-ratio, så nyest
-			$attempt = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT passed, raw_score, max_score
-					FROM {$table}
-					WHERE user_id=%d AND lesson_id=%d AND content_id=%d
-					ORDER BY (passed = 1) DESC,
-							CASE WHEN max_score IS NOT NULL AND max_score > 0 THEN raw_score / max_score ELSE 0 END DESC,
-							created_at DESC
-					LIMIT 1",
-					$user_id, $lesson_id, $cid
-				),
-				ARRAY_A
-			);
-
-			if ( ! $attempt ) {
-				return false; // ingen forsøk på denne H5P enda
-			}
-
-			$ok = false;
-			if ( (int) $attempt['passed'] === 1 ) {
-				$ok = true;
-			} elseif ( is_numeric( $attempt['raw_score'] ) && is_numeric( $attempt['max_score'] ) && (float) $attempt['max_score'] > 0 ) {
-				$pct = ( (float) $attempt['raw_score'] / (float) $attempt['max_score'] ) * 100.0;
-				$ok  = $pct >= $threshold;
-			}
-
-			if ( ! $ok ) {
-				return false; // én av flere ikke bestått → hele leksjonen ikke bestått
-			}
-		}
-
-		return true; // alle H5P er bestått på beste forsøk
+		$items = FKHS_Progress::get_items( $user_id, $lesson_id, false );
+		$gate  = FKHS_Progress::summarize( $items );
+		return $gate['passed'];
 	}
 
 
@@ -216,12 +169,6 @@ class FKHS_Sensei {
 			$lesson_id = (int) Sensei()->quiz->get_lesson_id( $quiz_id );
 		}
 		if ( ! $lesson_id ) {
-			return;
-		}
-
-		// Only enforce when the lesson explicitly requires H5P pass.
-		$require_h5p = (bool) get_post_meta( $lesson_id, '_fkhs_require_h5p_pass', true );
-		if ( ! $require_h5p ) {
 			return;
 		}
 

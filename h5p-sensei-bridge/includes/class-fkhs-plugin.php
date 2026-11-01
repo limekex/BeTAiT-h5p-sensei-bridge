@@ -137,7 +137,8 @@ class FKHS_Plugin {
 		if ( ! $threshold ) {
 			$threshold = 70.0;
 		}
-		$require = (bool) get_post_meta( $lesson_id, '_fkhs_require_h5p_pass', true );
+		// Start conservatively until authenticated status supplies the gate state.
+		$require = ! empty( FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id ) );
 
 		// Version the asset with filemtime when possible (cache-busting in dev).
 		$script_rel_path = 'assets/js/h5p-sensei-bridge.js';
@@ -171,24 +172,43 @@ class FKHS_Plugin {
 			'debug'     => (bool) WP_DEBUG,
 			'bypass'    => (bool) ( current_user_can( 'manage_sensei_grades' ) || current_user_can( 'manage_options' ) ),
 			'i18n' => array(
-				'completeH5PFirst'     => __( 'Complete the H5P first', 'h5p-sensei-bridge' ),
-				'blockedNoticeQuiz'    => __( 'You need to pass the in-lesson tasks before you can take the quiz.', 'h5p-sensei-bridge' ),
-				'blockedNoticeLesson'  => __( 'You need to pass the in-lesson tasks before you can complete the lesson.', 'h5p-sensei-bridge' ),
-				'overlayPassed'        => __( 'This task is passed: %1$s / %2$s points (accepted).', 'h5p-sensei-bridge' ),
-				'overlayNotPassed'     => __( 'Taken earlier, not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.', 'h5p-sensei-bridge' ),
-				'practiceAgain'        => __( 'Practice again', 'h5p-sensei-bridge' ),
-				'retryNow'             => __( 'Retry now', 'h5p-sensei-bridge' ),
+          // Tooltips / sperrer
+          'completeH5PFirst'     => __( 'Complete the H5P first', 'h5p-sensei-bridge' ),
+          'blockedNoticeQuiz'    => __( 'You need to pass the in-lesson tasks before you can take the quiz.', 'h5p-sensei-bridge' ),
+          'blockedNoticeLesson'  => __( 'You need to pass the in-lesson tasks before you can complete the lesson.', 'h5p-sensei-bridge' ),
 
-				'statusHeading'        => __( 'Lesson tasks status', 'h5p-sensei-bridge' ),
-				'statusAllPassed'      => __( 'All tasks are passed. You can continue.', 'h5p-sensei-bridge' ),
-				'statusProgress'       => __( '%1$d of %2$d tasks passed', 'h5p-sensei-bridge' ),
-				'statusRemaining'      => __( 'Remaining:', 'h5p-sensei-bridge' ),
-				'statusViewTask'       => __( 'View task', 'h5p-sensei-bridge' ),
-				'statusRemainingItem' => __( '%1$s — best %2$s, required %3$s', 'h5p-sensei-bridge' ),
-				'taskPassed'        => __( 'Task passed', 'h5p-sensei-bridge' ),
-				'notPassedYet'      => __( 'Not passed yet', 'h5p-sensei-bridge' ),
+          // Overlays ved bestått/ikke bestått/kun fullført
+          // %1$s = poeng (raw), %2$s = maks (max), %3$s = terskel i % (f.eks. '70%')
+          'overlayPassed'        => __( 'This task is passed: %1$s / %2$s points (accepted).', 'h5p-sensei-bridge' ),
+          'overlayNotPassed'     => __( 'Not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.', 'h5p-sensei-bridge' ),
+          'overlayCompleted'     => __( 'This task is completed.', 'h5p-sensei-bridge' ),
+          'overlayIncomplete'    => __( 'Not completed yet. Click to view.', 'h5p-sensei-bridge' ),
+          'practiceAgain'        => __( 'Practice again', 'h5p-sensei-bridge' ),
+          'retryNow'             => __( 'Retry now', 'h5p-sensei-bridge' ),
 
-			),
+          // Tittel/labels i statuspanel
+          'statusHeading'        => __( 'Lesson tasks status', 'h5p-sensei-bridge' ),
+          'statusAllPassed'      => __( 'All required tasks are satisfied. You can continue.', 'h5p-sensei-bridge' ),
+          // %1$d = antall bestått/oppfylt, %2$d = totalt (kun “gating” items)
+          'statusProgress'       => __( '%1$d of %2$d tasks passed', 'h5p-sensei-bridge' ),
+          'statusRemaining'      => __( 'Remaining:', 'h5p-sensei-bridge' ),
+          // %1$s = tittel, %2$s = beste prosent (f.eks. '62%'), %3$s = krav i prosent
+          'statusRemainingItem'  => __( '%1$s — best %2$s, required %3$s', 'h5p-sensei-bridge' ),
+          // For completion-only: %1$s = tittel
+          'statusRemainingComplete' => __( '%1$s — not completed yet', 'h5p-sensei-bridge' ),
+
+          // Ekstra panel-hjelpetekster
+          'noH5Ps'               => __( 'No mandatory H5P tasks yet.', 'h5p-sensei-bridge' ),
+          'optionalNotice'       => __( 'Optional interactive content is available.', 'h5p-sensei-bridge' ),
+
+          // Små titler på overlays/badges
+          'taskPassed'           => __( 'Task passed', 'h5p-sensei-bridge' ),
+          'notPassedYet'         => __( 'Not passed yet', 'h5p-sensei-bridge' ),
+          'notCompletedYet'      => __( 'Not completed yet', 'h5p-sensei-bridge' ),
+
+          // (valgfri, hvis du vil bruke en knapp/lenke-tekst i statuslista)
+          'statusViewTask'       => __( 'View task', 'h5p-sensei-bridge' ),
+      ),
 		);
 
 		/**
@@ -203,5 +223,5 @@ class FKHS_Plugin {
 		wp_enqueue_script( 'fkhs-h5p-bridge' );
 	}
 
-	
+
 }

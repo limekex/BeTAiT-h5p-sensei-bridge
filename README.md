@@ -1,6 +1,6 @@
 # H5P Sensei Bridge
 
-> **Development status (2026-11-01):** See the [engineering delivery plan](docs/ENGINEERING_PLAN.md) for the source-based review, prioritized backlog, acceptance criteria and VS Code handoff. Existing features below are not a claim of verified production readiness.
+> **Development status (2026-11-01):** The [engineering plan](docs/ENGINEERING_PLAN.md) now reconciles the live-used `develop` branch with `main`. Read the [pre-merge review and staging gate](docs/DEVELOP_REVIEW.md) before deployment. This candidate includes focused corrections and regression tests; staging verification remains open.
 
 A WordPress plugin that bridges **H5P** task results with **Sensei LMS** lessons and quizzes.  
 It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CTAs until tasks are passed.
@@ -11,7 +11,9 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 - Listens to H5P xAPI events in-lesson.
 - Logs attempts (latest + best score) per content & lesson.
-- Calculates pass/fail based on threshold % (default 70).
+- Resolves thresholds per H5P activity, falling back to legacy activity/lesson settings and then 70%.
+- A threshold of 0 tracks completion; before a stored attempt it is optional under the develop behavior.
+- Shared progress reads supply REST status and server-side Sensei guards; see the compatibility contract in the engineering plan.
 - REST endpoints for frontend:
   - `POST /wp-json/fkhs/v1/h5p-xapi`
   - `GET  /wp-json/fkhs/v1/h5p-status?lesson_id=123`
@@ -37,8 +39,8 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 ## Installation
 
-1. Clone or download this repo into `wp-content/plugins/h5p-sensei-bridge`.
-2. Run `composer install` if dependencies are required (future).
+1. Clone the repository into a development checkout.
+2. Copy or symlink its nested `h5p-sensei-bridge/` directory to `wp-content/plugins/h5p-sensei-bridge`. There is no Composer install step at present.
 3. Activate **H5P Sensei Bridge** in WP Admin → Plugins.
 4. Ensure your H5P and Sensei plugins are active.
 
@@ -48,7 +50,7 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 1. Student opens lesson with H5P tasks.
 2. JS listens to `H5P.externalDispatcher.on('xAPI')`.
-3. Each attempt → REST `POST /h5p-xapi`.
+3. Each event → REST `POST /h5p-xapi`; zero-threshold incomplete events are currently not stored.
 4. Server logs attempt + evaluates pass.
 5. JS fetches `/h5p-status?lesson_id=123`:
    - Adds overlay/badge on each H5P task.
@@ -82,9 +84,10 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
     "statement": { "result": { "score": { "raw": 7, "max": 10 }, "success": true, "completion": true }, ... }
   }
   ```
-- **Server calculates** `passed`:
-  - Primarily `(raw/max)*100 >= threshold`.
-  - Fallback: `result.success` if score is missing.
+- **Server calculates** `passed` using the effective per-activity threshold.
+  - Positive threshold: primarily `(raw/max)*100 >= threshold`, with success fallback.
+  - Zero threshold: completion-only. Current completion inference and synthetic events require the review in [DEVELOP_REVIEW.md](docs/DEVELOP_REVIEW.md).
+  - The client threshold field is a hint, not the policy source.
 - **Stores** attempt (including lesson title).
 - **Response:** `{ "ok": true }`.
 
@@ -108,11 +111,15 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
   }
   ```
 
-**Server headers for `h5p-status`:**
+The status response also supplies canonical `required` and `passed` values. Each item includes `counts_for_gate` and `requirement_met`, alongside the existing latest/best fields.
+
+**Server headers explicitly set for `h5p-status`:**
 - `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`
 - `Pragma: no-cache`
 - `Expires: 0`
-- `Vary: Cookie, X-WP-Nonce`
+- `X-LiteSpeed-Cache-Control: no-cache`
+
+Verify actual proxy/cache behavior on staging; no explicit `Vary` header is set by this controller.
 
 **Client:** uses `cache: 'no-store'` + `_ts=Date.now()`.
 
@@ -196,6 +203,7 @@ add_filter('fkhs_threshold_for_lesson', function($thr, $lesson_id, $user_id){
 - Enable `WP_DEBUG` for more logging (`fkH5P.debug = true`).
 - Frontend script is versioned with `filemtime()` for dev cache busting.
 - Admin report depends on `wp-i18n`.
+- Run `php tests/progress.php` and `node --test tests/gate.test.cjs`; these are regression fixtures, not full WordPress integration tests. See the engineering plan for syntax checks and staging requirements.
 
 ---
 
