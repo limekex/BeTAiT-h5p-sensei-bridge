@@ -80,7 +80,7 @@ Observed locally with PHP 8.3.6 and Node 24.22.1: PHP syntax passes, 52 PHP asse
 | [CI configuration](../.github/workflows/checks.yml) | Syntax and same regression tests | First run failed before test steps; see below |
 | Staging copy of live | Real H5P/Sensei/DB/browser behavior and rollback | Not run; merge gate open |
 
-The first [GitHub Actions run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41358277345) failed before any test step was reported: the job has an empty steps list and no assigned runner name. Job-log retrieval returned BlobNotFound. The underlying runner/configuration cause is not established by the available API evidence. CI is **not green**; inspect the run's annotations in GitHub and resolve it before merging. Local test results above remain separate evidence.
+Confirmed 2026-11-02 from the [GitHub run annotation](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41358395263): “The job was not started because your account is locked due to a billing issue.” The workflow did not execute its test steps. The account owner must resolve the billing lock, then re-run the checks on the current PR head. No workflow/test change can resolve this account restriction. CI remains unverified; local passing tests and the staging requirements are unchanged.
 
 ## VS Code handoff
 

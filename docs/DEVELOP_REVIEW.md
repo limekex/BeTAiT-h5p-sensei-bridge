@@ -55,4 +55,4 @@ The review branch combines both source histories and preserves main's documentat
 
 ## CI follow-up
 
-The first [Actions run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41358277345) failed with no test steps and an empty runner name; job logs were unavailable (BlobNotFound). The cause is unconfirmed. Inspect the run annotations and repository Actions configuration before re-running; do not treat this as a failing PHP/JS test or a successful CI verification. CI remains a merge blocker.
+Confirmed 2026-11-02 from the [GitHub run annotation](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41358395263): “The job was not started because your account is locked due to a billing issue.” The workflow did not execute its test steps. The account owner must resolve the billing lock, then re-run the checks on the current PR head. No workflow/test change can resolve this account restriction. CI remains unverified; local passing tests and the staging requirements are unchanged.
