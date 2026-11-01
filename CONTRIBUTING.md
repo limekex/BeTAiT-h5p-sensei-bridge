@@ -2,6 +2,8 @@
 
 Thanks for considering contributing!
 
+Start with [docs/ENGINEERING_PLAN.md](docs/ENGINEERING_PLAN.md). It defines the task order, source references, acceptance checks and VS Code handoff. Reference the relevant HSB task ID in each PR and record verification evidence. At the reviewed baseline there is no test/lint CI; HSB-001 establishes the initial regression harness and HSB-006 adds the wider checks. Do not report CI as passing when it has not run.
+
 ## How to contribute
 1. Fork the repo, create a feature branch from `develop` (or `main` if you prefer trunk-based):  
    `git checkout -b feature/short-description`

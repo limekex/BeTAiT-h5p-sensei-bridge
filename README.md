@@ -1,5 +1,7 @@
 # H5P Sensei Bridge
 
+> **Development status (2026-11-01):** See the [engineering delivery plan](docs/ENGINEERING_PLAN.md) for the source-based review, prioritized backlog, acceptance criteria and VS Code handoff. Existing features below are not a claim of verified production readiness.
+
 A WordPress plugin that bridges **H5P** task results with **Sensei LMS** lessons and quizzes.  
 It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CTAs until tasks are passed.
 
@@ -29,7 +31,7 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 - WordPress 6.0+
 - Sensei LMS 4.0+
 - H5P plugin (modular content).
-- PHP 7.4+
+- PHP 8.0+ (declared by the plugin header; compatibility testing is tracked in HSB-005/006).
 
 ---
 
@@ -183,7 +185,8 @@ add_filter('fkhs_threshold_for_lesson', function($thr, $lesson_id, $user_id){
 ## Security
 
 - Requires logged-in user + WordPress REST nonce.
-- Validates incoming data and checks Sensei enrollment.
+- Current enrollment checking is a placeholder, and payload/content membership validation needs hardening. See HSB-001 in the [engineering plan](docs/ENGINEERING_PLAN.md).
+- Client-generated xAPI scores are not independent proof of assessment integrity.
 - Does not mark lessons complete – Sensei remains in charge.
 
 ---
@@ -198,7 +201,7 @@ add_filter('fkhs_threshold_for_lesson', function($thr, $lesson_id, $user_id){
 
 ## License
 
-MIT. See `LICENSE`.
+License metadata needs maintainer resolution: this README previously declared MIT, while the plugin header declares GPLv2 or later, and no LICENSE file is present at the reviewed baseline. See HSB-010 in the [engineering plan](docs/ENGINEERING_PLAN.md).
 
 ---
 

@@ -9,6 +9,8 @@ assignees: ''
 
 # Roadmap — H5P Sensei Bridge
 
+> Historical feature wishlist. Use the [engineering delivery plan](../../docs/ENGINEERING_PLAN.md) for current implementation status, dependencies, acceptance criteria and execution order. Several unchecked items below are already partially implemented; the reconciliation table explains what remains.
+
 ## Phase 1: Stabilization & Polish
 - [ ] **Cache & fetch robustness** – Ensure fresh status data is always used (no browser/proxy caching issues).
 - [ ] **Better debug mode** – Add a developer toggle (via `window.fkH5P.debug` or admin setting) to log all status checks, events, and REST calls.
