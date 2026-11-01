@@ -52,3 +52,7 @@ See [commands and observed results](ENGINEERING_PLAN.md#local-evidence). PHP tes
 Rollback on staging: restore the previous plugin files/package, clear relevant PHP/asset caches, and compare stored rows/settings against the backup. This candidate has no schema/data migration to reverse. Restoring files does not undo Sensei state changes made during test completions; use the fixture/database snapshot for that. Do not restore a production database over newer learner activity without a separate recovery plan.
 
 The review branch combines both source histories and preserves main's documentation. Main and develop are not advanced, no release is published and no production deployment is performed by this review.
+
+## CI follow-up
+
+The first [Actions run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41358277345) failed with no test steps and an empty runner name; job logs were unavailable (BlobNotFound). The cause is unconfirmed. Inspect the run annotations and repository Actions configuration before re-running; do not treat this as a failing PHP/JS test or a successful CI verification. CI remains a merge blocker.

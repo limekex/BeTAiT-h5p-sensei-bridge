@@ -77,8 +77,10 @@ Observed locally with PHP 8.3.6 and Node 24.22.1: PHP syntax passes, 52 PHP asse
 | --- | --- | --- |
 | [PHP regression harness](../tests/progress.php) | Mixed thresholds, zero/optional/sticky state, isolation, filters, preserved metadata/attempts, guard exemption | Local pass |
 | [JS regression harness](../tests/gate.test.cjs) | Repeated locking/unlocking, bypass, requirement removal, pre-disabled controls | Local pass; baseline fails |
-| [CI configuration](../.github/workflows/checks.yml) | Syntax and same regression tests | Added; check PR run |
+| [CI configuration](../.github/workflows/checks.yml) | Syntax and same regression tests | First run failed before test steps; see below |
 | Staging copy of live | Real H5P/Sensei/DB/browser behavior and rollback | Not run; merge gate open |
+
+The first [GitHub Actions run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41358277345) failed before any test step was reported: the job has an empty steps list and no assigned runner name. Job-log retrieval returned BlobNotFound. The underlying runner/configuration cause is not established by the available API evidence. CI is **not green**; inspect the run's annotations in GitHub and resolve it before merging. Local test results above remain separate evidence.
 
 ## VS Code handoff
 
