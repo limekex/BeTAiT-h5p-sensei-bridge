@@ -1,67 +1,6 @@
 <?php
-/** Dependency-free regression harness; WordPress, SQL and Sensei are test doubles. */
-define( 'ABSPATH', __DIR__ );
-define( 'ARRAY_A', 'ARRAY_A' );
-define( 'FKHS_TABLE', 'fkhs_attempts' );
-$meta = $contents = $filters = array();
-$checks = 0;
-function check( $condition, $message ) {
-    global $checks;
-    if ( ! $condition ) { throw new RuntimeException( $message ); }
-    ++$checks;
-}
-function get_post_meta( $id, $key, $single = true ) { global $meta; return $meta[$id][$key] ?? ''; }
-function update_post_meta( $id, $key, $value ) { global $meta; $meta[$id][$key] = $value; }
-function delete_post_meta( $id, $key ) { global $meta; unset( $meta[$id][$key] ); }
-function get_post_field( $field, $id ) { global $contents; return $contents[$id] ?? ''; }
-function get_current_user_id() { return 7; }
-function current_user_can( $cap, ...$args ) { return true; }
-function user_can( $id, $cap ) { return $id === 99; }
-function wp_verify_nonce( ...$args ) { return true; }
-function wp_unslash( $v ) { return $v; }
-function apply_filters( $tag, $value, ...$args ) { global $filters; return isset($filters[$tag]) ? $filters[$tag]($value, ...$args) : $value; }
-function nocache_headers() {}
-function do_action( ...$args ) {}
-class WP_REST_Request {
-    public function __construct( public $lesson ) {}
-    public function get_param( $key ) { return $this->lesson; }
-}
-class WP_REST_Response {
-    public function __construct( public $data, public $status ) {}
-    public function header( ...$args ) {}
-}
-class Sensei_Utils {
-    public static $removed = array();
-    public static function sensei_remove_user_from_lesson( $lesson, $user ) { self::$removed[] = array($lesson, $user); }
-}
-class FakeDB {
-    public $prefix = 'wp_';
-    public $rows = array();
-    public function prepare( $sql, ...$args ) { return array($sql, $args); }
-    private function matches( $args ) {
-        return array_values(array_filter($this->rows, fn($r) => $r['user_id'] === $args[0] && $r['lesson_id'] === $args[1] && $r['content_id'] === $args[2]));
-    }
-    public function get_row( $query, $format ) {
-        [$sql, $args] = $query;
-        if ( str_contains($sql, 'h5p_contents') ) return array('title'=>'Activity', 'name'=>'H5P.Test', 'major_version'=>1, 'minor_version'=>0);
-        $rows = $this->matches($args);
-        if ( str_contains($sql, 'raw_score/max_score') ) {
-            $rows = array_values(array_filter($rows, fn($r) => $r['max_score'] > 0));
-            usort($rows, fn($a, $b) => ($b['raw_score']/$b['max_score'] <=> $a['raw_score']/$a['max_score']) ?: ($b['id'] <=> $a['id']));
-        } else {
-            check(str_contains($sql, 'created_at DESC, id DESC'), 'Latest SQL must tie-break by ID');
-            usort($rows, fn($a, $b) => $b['id'] <=> $a['id']);
-        }
-        return $rows[0] ?? null;
-    }
-    public function get_var( $query ) {
-        foreach ($this->matches($query[1]) as $r) if ($r['completed']) return 1;
-        return null;
-    }
-}
-$wpdb = new FakeDB();
-$base = __DIR__ . '/../h5p-sensei-bridge/includes/';
-foreach (array('helpers', 'progress', 'sensei', 'rest', 'metabox') as $name) require $base . 'class-fkhs-' . $name . '.php';
+/** Shared-policy regressions; no WordPress runtime. */
+require __DIR__ . '/bootstrap.php';
 function attempt( $id, $lesson, $cid, $raw, $max, $passed = 0, $completed = 0, $user = 7 ) {
     global $wpdb;
     $wpdb->rows[] = array('id'=>$id, 'lesson_id'=>$lesson, 'content_id'=>$cid, 'user_id'=>$user, 'raw_score'=>$raw, 'max_score'=>$max, 'passed'=>$passed, 'completed'=>$completed, 'created_at'=>'2026-11-01 12:00:00');
@@ -104,7 +43,7 @@ check($wpdb->rows === $before, 'Attempts unchanged');
 // Old require flag is absent, yet required positive-score content invokes the guard.
 $contents[21] = '[h5p id="1"]'; $meta[21]['_fkhs_threshold_map'] = array(1=>80);
 FKHS_Sensei::guard_completion(8,21); // not current viewer, so no redirect/exit
-check(Sensei_Utils::$removed === array(array(21,8)), 'Guard no longer depends on deleted legacy flag');
+check(count($sensei->lesson_progress_repository->saved) === 1 && empty(Sensei_Utils::$removed), 'Guard reopens progress without destructive reset or legacy flag');
 FKHS_Sensei::guard_completion(99,21);
-check(count(Sensei_Utils::$removed) === 1, 'Admin exemption retained');
+check(count($sensei->lesson_progress_repository->saved) === 1, 'Admin exemption retained');
 echo "PASS: $checks assertions (test doubles; not WordPress integration).\n";

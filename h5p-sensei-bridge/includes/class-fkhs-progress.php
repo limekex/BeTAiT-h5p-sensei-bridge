@@ -3,7 +3,21 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class FKHS_Progress {
+	private static function check_read(): void {
+		global $wpdb;
+		if ( $wpdb->last_error ) { throw new RuntimeException( 'Progress storage is unavailable.' ); }
+	}
 	public static function get_items( int $user_id, int $lesson_id, bool $with_metadata = true ): array {
+		global $wpdb;
+		$suppressed = $wpdb->suppress_errors( true );
+		try {
+			return self::query_items( $user_id, $lesson_id, $with_metadata );
+		} finally {
+			$wpdb->suppress_errors( $suppressed );
+		}
+	}
+
+	private static function query_items( int $user_id, int $lesson_id, bool $with_metadata ): array {
 		$ids = FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id );
 		if ( empty( $ids ) ) {
 			return array();
@@ -27,6 +41,7 @@ class FKHS_Progress {
 				ARRAY_A
 			);
 
+			self::check_read();
 			$has_attempt      = ! empty( $attempt );
 			$latest_completed = false;
 
@@ -44,6 +59,7 @@ class FKHS_Progress {
 				),
 				ARRAY_A
 			);
+			self::check_read();
 			if ( $best && is_numeric( $best['raw_score'] ) && is_numeric( $best['max_score'] ) && (float) $best['max_score'] > 0 ) {
 				$best_raw = (float) $best['raw_score'];
 				$best_max = (float) $best['max_score'];
@@ -65,6 +81,7 @@ class FKHS_Progress {
 					),
 					ARRAY_A
 				);
+				self::check_read();
 				if ( $meta ) {
 					$h5p_title = (string) ( $meta['title'] ?? '' );
 					$h5p_type  = $meta['name'] ? sprintf( '%s %d.%d', $meta['name'], (int) $meta['major_version'], (int) $meta['minor_version'] ) : '';
@@ -83,6 +100,7 @@ class FKHS_Progress {
 				)
 			);
 
+			self::check_read();
 			// Siste-resultat (kan være "tomt" progressed) → beregn "latest"
 			$latest_pass = false; $latest_raw = null; $latest_max = null; $latest_pct = null;
 

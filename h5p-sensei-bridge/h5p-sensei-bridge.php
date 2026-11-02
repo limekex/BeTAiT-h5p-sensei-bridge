@@ -30,7 +30,7 @@ define( 'FKHS_FILE', __FILE__ );                     // Absolute path to this fi
 define( 'FKHS_DIR', plugin_dir_path( __FILE__ ) );   // Plugin directory path (with trailing slash).
 define( 'FKHS_URL', plugin_dir_url( __FILE__ ) );    // Plugin URL (with trailing slash).
 define( 'FKHS_TABLE', 'fkhs_attempts' );             // DB table (without prefix).
-define( 'FKHS_DB_VER', '0.2.0' );                    // DB schema version for attempts table (handles upgrades).
+define( 'FKHS_DB_VER', '0.3.0' );                    // DB schema version for attempts table (handles upgrades).
 
 /**
  * -------------------------------------------------------------------------
@@ -133,7 +133,6 @@ add_action(
 	static function () {
 		if ( get_option( 'fkhs_db_ver' ) !== FKHS_DB_VER ) {
 			FKHS_Plugin::maybe_upgrade();
-			update_option( 'fkhs_db_ver', FKHS_DB_VER );
 		}
 	}
 );

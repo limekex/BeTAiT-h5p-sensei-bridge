@@ -9,46 +9,28 @@
     var el = document.createElement('style'); el.id = id; el.textContent = css; document.head.appendChild(el);
   }
 
-  // Map of completion-only H5P ids
-var fkhsCompletionOnly = new Set();
-// Debounce timers and done-flags per content id
-var fkhsSynthTimers = Object.create(null);
-var fkhsSynthDone   = Object.create(null);
-var fkhsCompletionReady = false;        // blir true når /h5p-status er lest
-var fkhsReplayOnce = Object.create(null); // engangs-retry per cid
-// Track om siste hendelse var en faktisk evaluering
-var fkhsEvaluated = Object.create(null);
-
-
-// Fire a synthetic "completed" statement for an H5P with threshold==0
-function fkhsSendSyntheticCompleted(cid) {
-  if (!cid || fkhsSynthDone[cid]) return;
-  fkhsSynthDone[cid] = true;
-
-  if (window.fkH5P?.debug) {
-    console.debug('[FKHS] synthetic completed → POST', { cid });
-  }
-
-  // Minimal xAPI that our REST understands (server relies on result.completion / success)
-  var stmt = {
-    verb:   { id: 'http://adlnet.gov/expapi/verbs/completed' },
-    result: { completion: true, success: true }
-    // (We don't need to spoof actor/object — contentId is passed separately.)
-  };
-
-  postXAPI(stmt, cid);
-}
-
+  var fkhsEvaluated = Object.create(null);
+  var fkhsQueue = [];
+  var fkhsSending = false;
+  var fkhsSaveError = null;
+  var fkhsStatusError = null;
+  var fkhsInputError = null;
+  var fkhsLastStored = false;
+  var fkhsStatusVersion = 0;
+  var fkhsStatusPending = false;
+  var fkhsTransportBlocked = false;
+  var fkhsRuntimeState = 'idle';
 
   injectStyle('fkhs-bridge-status-css', `
     .fkhs-status-panel{ margin-top:.75rem; border:1px solid #e5e7eb; border-radius:12px; padding:.75rem 1rem; background:#fafafa; box-shadow:0 8px 18px rgba(0,0,0,.05) }
+    .fkhs-status-panel[hidden]{ display:none !important; }
+    .fkhs-locked{ opacity:.5; cursor:not-allowed; }
     .fkhs-status-title{font-weight:600; margin:0 0 .25rem 0}
     .fkhs-status-sub{color:#475569; margin:0 0 .5rem 0}
     .fkhs-status-list{margin:0; padding-left:1rem}
     .fkhs-status-list li{margin:.15rem 0}
     .fkhs-status-link{cursor:pointer; text-decoration:underline}
-    .sensei-lesson-footer{display:block !important;}
-    .sensei-lesson-footer > .fkhs-status-panel{ margin-top:0; margin-bottom:1rem; order:0; padding:.5rem 1rem; }
+    .fkhs-feedback{ width:100%; margin-block:.75rem; }
     .fkhs-status-optional{ color:#64748b; font-style:italic; margin-top:.5rem }
   `);
 
@@ -74,33 +56,140 @@ function fkhsSendSyntheticCompleted(cid) {
     @keyframes fkhs-bump{ 0%{transform:translateY(-2px)} 100%{transform:translateY(0)} }
   `);
 
-    function postXAPI(statement, contentId) {
-      try {
-        fetch(window.fkH5P?.restUrl, {
-          method: 'POST',
-          credentials: 'same-origin',       // 👈 VIKTIG
-          cache: 'no-store',                // 👈 unngå mellomlagring
-          headers: {
-            'Content-Type': 'application/json',
-            'X-WP-Nonce': window.fkH5P?.nonce
-          },
-          body: JSON.stringify({
-            statement: statement,
-            contentId: contentId || null,
-            lesson_id: window.fkH5P?.lessonId || null,
-            threshold: window.fkH5P?.threshold || 70
-          })
-        })
-        .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
-        .then(function () {
-          fetchAndRenderH5PStatus();
-        })
-        .catch(function (e) {
-          if (window.fkH5P?.debug) console.warn('[FKHS] xAPI POST failed', e);
-        });
-      } catch (e) {}
-    }
+  function transportText(key, fallback) { return window.fkH5P?.i18n?.[key] || fallback; }
 
+  function syncTransport() {
+    fkhsTransportBlocked = !!(fkhsQueue.length || fkhsSaveError || fkhsStatusError || fkhsInputError || fkhsStatusPending || fkhsRuntimeState === 'waiting' || fkhsRuntimeState === 'failed');
+    setQuizButtonVisibility(window.fkhsGatePassed);
+    var panel = ensureStatusPanel();
+    var redirectNotice = document.getElementById('fkhs-redirect-notice');
+    if (redirectNotice) redirectNotice.hidden = window.fkhsGatePassed && !fkhsTransportBlocked;
+    // A previous pass must not say "You can continue" while saving is unresolved.
+    panel.hidden = fkhsTransportBlocked;
+    var notice = document.getElementById('fkhs-save-status');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'fkhs-save-status';
+      notice.className = 'fkhs-status-panel';
+      notice.setAttribute('role', 'status');
+      notice.setAttribute('aria-live', 'polite');
+      panel.parentNode.insertBefore(notice, panel.nextSibling);
+    }
+    var message;
+    var failure = fkhsSaveError || fkhsStatusError;
+    if (fkhsInputError) message = transportText('eventNotRecorded', 'An activity event could not be recorded. Reload the page and repeat the activity.');
+    else if (failure?.auth) message = transportText('sessionExpired', 'Your session or access has expired. Sign in, then reload this page and repeat any unsaved activity.');
+    else if (fkhsSaveError?.retryable === false) message = transportText('saveUnconfirmed', 'Saving could not be confirmed. Reload the page to check progress before repeating the activity.');
+    else if (fkhsSaveError) message = transportText('saveFailed', 'Your activity has not been confirmed saved. Keep this page open and retry.');
+    else if (fkhsQueue.length) message = transportText('saving', 'Saving your activity… Keep this page open.');
+    else if (fkhsStatusError) message = transportText('statusFailed', 'Progress could not be checked. Retry before continuing.');
+    else if (fkhsRuntimeState === 'failed') message = transportText('h5pUnavailable', 'H5P tracking could not start. Retry, or reload this page before repeating the activity.');
+    else if (fkhsRuntimeState === 'waiting') message = transportText('h5pWaiting', 'Waiting for H5P tracking to start…');
+    else if (fkhsStatusPending) message = transportText('checkingProgress', 'Checking progress…');
+    else if (fkhsLastStored) message = transportText('activitySaved', 'Your activity is saved.');
+    else message = '';
+    notice.replaceChildren();
+    notice.hidden = !message;
+    var text = document.createElement('span'); text.textContent = message; notice.appendChild(text);
+    if (failure && !failure.auth && failure.retryable !== false && !fkhsSending) {
+      var retry = document.createElement('button');
+      retry.type = 'button'; retry.className = 'fkhs-btn-sm';
+      retry.textContent = transportText('retrySaving', 'Retry');
+      retry.addEventListener('click', retryTransport);
+      notice.appendChild(retry);
+    }
+    if (failure?.auth && window.fkH5P?.loginUrl) {
+      var login = document.createElement('a');
+      login.href = window.fkH5P.loginUrl; login.target = '_blank'; login.rel = 'noopener';
+      login.textContent = transportText('signInAgain', 'Sign in in a new tab');
+      notice.appendChild(login);
+    }
+    if (fkhsRuntimeState === 'failed' && !failure && !fkhsInputError) {
+      var retryRuntime = document.createElement('button');
+      retryRuntime.type = 'button'; retryRuntime.className = 'fkhs-btn-sm';
+      retryRuntime.textContent = transportText('retryH5P', 'Retry H5P tracking');
+      retryRuntime.addEventListener('click', function() { startH5PTracking(true); });
+      notice.appendChild(retryRuntime);
+    }
+  }
+
+  async function requestJSON(url, options) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 15000);
+    try {
+      var response = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+      var json;
+      try { json = await response.json(); } catch (_) { json = null; }
+      if (!response.ok || !json || json.ok !== true) {
+        throw { status: response.status, auth: response.status === 401 || response.status === 403,
+          retryable: response.status >= 500 || response.status === 429,
+          reason: json?.reason || json?.code || 'invalid_response' };
+      }
+      return json;
+    } catch (error) {
+      if (typeof error?.status === 'number') throw error;
+      throw { status: 0, retryable: true, reason: 'network_error' };
+    } finally { clearTimeout(timer); }
+  }
+
+  function eventUUID() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    if (!window.crypto?.getRandomValues) return null;
+    var bytes = new Uint8Array(16); window.crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
+    var hex = Array.from(bytes, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+  }
+
+  function postXAPI(statement, contentId) {
+    var id = eventUUID();
+    if (!id || !contentId || fkhsQueue.length >= 100) {
+      fkhsInputError = true; syncTransport(); return Promise.resolve(false);
+    }
+    var body;
+    try { body = JSON.stringify({ statement: statement, contentId: contentId, lesson_id: window.fkH5P.lessonId, event_id: id }); }
+    catch (_) { fkhsInputError = true; syncTransport(); return Promise.resolve(false); }
+    // Freeze one payload/identity per received event, including every manual retry.
+    var promise = new Promise(function (resolve) { fkhsQueue.push({ body: body, resolve: resolve }); });
+    ++fkhsStatusVersion; fkhsStatusPending = false; // Invalidate reads started before this write.
+    syncTransport();
+    if (!fkhsSaveError) pumpAttempts();
+    return promise;
+  }
+
+  async function pumpAttempts() {
+    if (fkhsSending) return;
+    fkhsSending = true;
+    while (fkhsQueue.length) {
+      var job = fkhsQueue[0];
+      try {
+        var receipt = await requestJSON(window.fkH5P.restUrl, {
+          method: 'POST', credentials: 'same-origin', cache: 'no-store',
+          headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': window.fkH5P.nonce }, body: job.body
+        });
+        if (!(receipt.stored === true && Number.isSafeInteger(receipt.attempt_id) && receipt.attempt_id > 0) &&
+            !(receipt.stored === false && receipt.skipped === true && ['completion_pending', 'filtered', 'nested_activity'].includes(receipt.reason))) {
+          // An older server's {ok:true} is not a persistence acknowledgement.
+          throw { retryable: false, reason: 'unconfirmed_save' };
+        }
+        fkhsLastStored = fkhsLastStored || receipt.stored;
+        fkhsQueue.shift(); fkhsSaveError = null;
+        ++fkhsStatusVersion; fkhsStatusPending = false;
+        job.resolve(receipt);
+      } catch (error) {
+        fkhsSaveError = error; job.resolve(false); break;
+      }
+    }
+    fkhsSending = false;
+    syncTransport();
+    if (!fkhsQueue.length) await fetchAndRenderH5PStatus();
+  }
+
+  function retryTransport() {
+    if (fkhsSending || (fkhsSaveError || fkhsStatusError)?.auth) return;
+    if (fkhsQueue.length) { fkhsSaveError = null; return pumpAttempts(); }
+    return fetchAndRenderH5PStatus();
+  }
 
   function showBlockedNotice(fromEl){
     try{
@@ -164,37 +253,25 @@ function fkhsSendSyntheticCompleted(cid) {
       panel.setAttribute('role','status');
       panel.setAttribute('aria-live','polite');
     }
-    var footer = document.querySelector('.sensei-lesson-footer');
-    if (footer) {
-      if (footer.firstChild !== panel) footer.insertBefore(panel, footer.firstChild);
-      panel.style.display = 'block'; panel.style.width = '100%';
-      if (window.fkH5P?.debug) panel.style.outline = '2px dashed #10b981';
-      return panel;
+    var feedback = document.getElementById('fkhs-feedback');
+    if (!feedback) {
+      feedback = document.createElement('div');
+      feedback.id = 'fkhs-feedback';
+      feedback.className = 'fkhs-feedback';
     }
-    var buttons = document.querySelector('.sensei-buttons-container') ||
-                  document.querySelector('.sensei-lesson-actions') ||
-                  document.querySelector('form.lesson_button_form') ||
-                  document.querySelector('.wp-block-sensei-lms-button-view-quiz');
-    if (buttons && getComputedStyle(buttons).display !== 'none') {
-      if (panel.parentNode !== buttons) buttons.appendChild(panel);
-      buttons.classList && buttons.classList.add('fkhs-has-status');
-      panel.style.display = 'block'; panel.style.width = '100%';
-      if (window.fkH5P?.debug) panel.style.outline = '2px dashed #10b981';
-      return panel;
+    // Keep feedback outside Sensei's forms/flex rows and screen-reader navigation.
+    var anchor = Array.from(document.querySelectorAll(
+      '.sensei-lesson-footer, .wp-block-sensei-lms-lesson-actions, .sensei-buttons-container, form.lesson_button_form'
+    )).find(function(el) { return !el.closest('.screen-reader-text'); });
+    if (anchor && anchor.parentNode) {
+      if (feedback.nextSibling !== anchor) anchor.parentNode.insertBefore(feedback, anchor);
+    } else {
+      var fallback = document.querySelector('main, .site-main, .entry-content, article, body') || document.body;
+      if (feedback.parentNode !== fallback) fallback.appendChild(feedback);
     }
-    var lastH5P = document.querySelector('.h5p-iframe[data-content-id]') ||
-                  document.querySelector('.h5p-content[id^="h5p-"]');
-    if (lastH5P) {
-      var wrap = lastH5P.closest('.entry-content, .lesson-content, article, .site-main, main') || lastH5P.parentElement || document.body;
-      if (panel.parentNode !== wrap) wrap.appendChild(panel);
-      panel.style.display = 'block'; panel.style.width = '100%';
-      if (window.fkH5P?.debug) panel.style.outline = '2px dashed #10b981';
-      return panel;
-    }
-    var fallback = document.querySelector('main, .site-main, .entry-content, article, body') || document.body;
-    if (panel.parentNode !== fallback) fallback.appendChild(panel);
-    panel.style.display = 'block'; panel.style.width = '100%';
-    if (window.fkH5P?.debug) panel.style.outline = '2px dashed #10b981';
+    if (panel.parentNode !== feedback) feedback.appendChild(panel);
+    var redirectNotice = document.getElementById('fkhs-redirect-notice');
+    if (redirectNotice && redirectNotice.parentNode !== feedback) feedback.insertBefore(redirectNotice, panel);
     return panel;
   }
 
@@ -333,153 +410,128 @@ function fkhsSendSyntheticCompleted(cid) {
     }catch(e){}
   }
 
-  // Stable identities: repeated renders must not retain stale blocking closures.
+  // Target actions, including Sensei's intentional screen-reader Learning Mode controls.
+  var fkhsActionSelector = [
+    '.sensei-lesson-actions a[href*="quiz"]', 'a.sensei-quiz-link', 'a[href*="/quiz/"]',
+    '.sensei-buttons-container a[href*="quiz"]',
+    '.wp-block-sensei-lms-button-view-quiz button',
+    '.wp-block-sensei-lms-button-complete-lesson button',
+    '[data-id="complete-lesson-button"]',
+    '.lesson_button_form button', 'button.complete-lesson', '.sensei-lesson-actions button',
+    '.sensei-course-theme-lesson-actions__take-quiz'
+  ].join(',');
+  var fkhsFormSelector = 'form.lesson_button_form, form[data-id="complete-lesson-form"], ' +
+    'form.sensei-course-theme-lesson-actions__take-quiz-form, .wp-block-sensei-lms-button-view-quiz form, .sensei-buttons-container form';
+  var fkhsCompletedSelector = '.wp-block-sensei-lms-button-lesson-completed button';
   var fkhsGateLocked = false;
-  var fkhsGateTooltip = '';
-  var fkhsOriginalControls = new WeakMap();
-    function showBlock(e){
-      var t=e?.target?.closest('button,a'); if(!t) return;
-      if(!t.title) t.title=fkhsGateTooltip;
-      showBlockedNotice(t);
-    }
-    function preventSubmit(e){ if(fkhsGateLocked){ e.preventDefault(); e.stopPropagation(); showBlock(e); } }
-    function preventClick(e){  if(fkhsGateLocked){ e.preventDefault(); e.stopPropagation(); showBlock(e); } }
-    function hostClick(e){
-      if (!fkhsGateLocked) return;
-      var t=e.target.closest('a,button'); if(!t) return;
-      if (t.classList.contains('fkhs-locked') || t.getAttribute('aria-disabled')==='true' || t.disabled){
-        e.preventDefault(); e.stopPropagation(); showBlockedNotice(t);
-      }
-    }
-    function preventKey(e){
-      if(fkhsGateLocked && (e.key==='Enter'||e.key===' ')){
-        var t=e.target.closest('button,a'); if(!t) return;
-        e.preventDefault(); e.stopPropagation(); showBlockedNotice(t);
-      }
-    }
+  var fkhsGateHandlersBound = false;
+  var fkhsOriginalControls = new Map();
 
-  function setQuizButtonVisibility(passed) {
-  try {
-    var require = !!(window.fkH5P && window.fkH5P.require);
-    var bypass  = !!(window.fkH5P && window.fkH5P.bypass);
+  function isGatedForm(form) {
+    if (!form || !form.matches(fkhsFormSelector)) return false;
+    return form.matches('form.lesson_button_form, form[data-id="complete-lesson-form"]') ||
+      /quiz/i.test(form.getAttribute('action') || '') || !!form.querySelector(fkhsActionSelector);
+  }
 
-    // Hvis ingen gating: oppfør deg som "passed"
-    if (!require) passed = true;
-    if (bypass)   passed = true;
+  function blockGateEvent(event) {
+    if (!fkhsGateLocked) return;
+    if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+    var target = event.target?.closest?.(event.type === 'submit' ? 'form' : fkhsActionSelector);
+    if (!target || (event.type === 'submit' && !isGatedForm(target))) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showBlockedNotice(target);
+  }
 
-    if (window.fkH5P?.debug) {
-      console.debug('[FKHS] setQuizButtonVisibility', { require, bypass, passed });
-    }
-
-    var tooltip = window.fkH5P?.i18n?.completeH5PFirst || 'Complete the H5P first';
-    fkhsGateLocked = !passed;
-    fkhsGateTooltip = tooltip;
-
-    // Kjente noder
-    var links = [].slice.call(document.querySelectorAll(
-      '.sensei-lesson-actions a[href*="quiz"], a.sensei-quiz-link, a[href*="/quiz/"], .sensei-buttons-container a[href*="quiz"]'
-    ));
-    var buttons = [].slice.call(document.querySelectorAll(
-      '.wp-block-sensei-lms-button-view-quiz button.wp-block-button__link,' +
-      'form.lesson_button_form [data-id="complete-lesson-button"],' +
-      '.wp-block-sensei-lms-button-view-quiz button,' +
-      '.lesson_button_form button,' +
-      'button.complete-lesson,' +
-      '.sensei-lesson-actions button'
-    ));
-    var forms = [].slice.call(document.querySelectorAll(
-      'form.lesson_button_form, .wp-block-sensei-lms-button-view-quiz form, .sensei-buttons-container form'
-    )).filter(function (f) {
-      var action = (f.getAttribute('action') || '').toLowerCase();
-      return action.includes('/quiz/') || action.includes('view-quiz') || action.includes('quiz');
+  function bindGateHandlers() {
+    if (fkhsGateHandlersBound) return;
+    fkhsGateHandlersBound = true;
+    // Capture before Sensei handlers; delegation also covers newly inserted controls
+    // before the mutation observer has had a chance to decorate them.
+    ['click', 'keydown', 'submit'].forEach(function(type) {
+      document.addEventListener(type, blockGateEvent, true);
     });
-    var hosts = [].slice.call(document.querySelectorAll(
-      '.sensei-buttons-container, .wp-block-sensei-lms-button-view-quiz, form.lesson_button_form, .sensei-lesson-actions, .sensei-lesson-footer'
-    ));
+  }
 
-    // Sørg for at wrapperne faktisk er synlige når passert
-    if (passed) {
-      document.querySelectorAll('.sensei-lesson-footer, .sensei-lesson-actions, .sensei-buttons-container')
-        .forEach(function(el){ el.style.display = ''; el.classList.remove('fkhs-hidden'); });
-    }
-
-    function disableEl(el){
-      if(!el) return;
-      if (!fkhsOriginalControls.has(el)) {
-        fkhsOriginalControls.set(el, { aria: el.getAttribute('aria-disabled'), opacity: el.style.opacity, title: el.title, disabled: el.disabled });
-      }
-      el.setAttribute('aria-disabled','true');
-      el.style.opacity='0.5';
-      el.title=tooltip;
-      el.classList.add('fkhs-locked');
-      if ('disabled' in el) try { el.disabled = true; } catch(_) {}
-    }
-    function enableEl(el){
-      if(!el) return;
-      var original = fkhsOriginalControls.get(el);
-      if (!original) return; // Never enable a control disabled by Sensei/another plugin.
+  function restoreControl(el, original) {
+    // Only undo attributes still owned by us; preserve later external changes.
+    if (el.getAttribute('aria-disabled') === 'true') {
       if (original.aria === null) el.removeAttribute('aria-disabled');
       else el.setAttribute('aria-disabled', original.aria);
-      el.style.opacity=original.opacity;
-      el.title=original.title;
-      el.classList.remove('fkhs-locked');
-      if ('disabled' in el) el.disabled=original.disabled;
-      fkhsOriginalControls.delete(el);
     }
-
-
-    if (passed) {
-      links.forEach(enableEl); buttons.forEach(enableEl);
-      forms.forEach(function (f){ f.removeEventListener('submit', preventSubmit, true); });
-      links.forEach(function (a){ a.removeEventListener('click', preventClick, true); a.removeEventListener('keydown', preventKey, true); });
-      buttons.forEach(function (b){ b.removeEventListener('click', preventClick, true); b.removeEventListener('keydown', preventKey, true); });
-      hosts.forEach(function (h){ if (h._fkhsLockBound){ h.removeEventListener('click', hostClick, true); h._fkhsLockBound=false; } });
-    } else {
-      links.forEach(disableEl); buttons.forEach(disableEl);
-      forms.forEach(function (f){ f.addEventListener('submit', preventSubmit, true); });
-      links.forEach(function (a){ a.addEventListener('click', preventClick, true); a.addEventListener('keydown', preventKey, true); });
-      buttons.forEach(function (b){ b.addEventListener('click', preventClick, true); b.addEventListener('keydown', preventKey, true); });
-      hosts.forEach(function (h){ if (!h._fkhsLockBound){ h.addEventListener('click', hostClick, true); h._fkhsLockBound=true; } });
-    }
-
-    if (window.fkH5P?.debug) {
-      console.debug('[FKHS] setQuizButtonVisibility affected', {
-        links: links.length, buttons: buttons.length, forms: forms.length, hosts: hosts.length
-      });
-    }
-  } catch (e) {
-    if (window.fkH5P?.debug) console.warn('[FKHS] setQuizButtonVisibility error', e);
+    if (el.title === original.tooltip) el.title = original.title;
+    el.classList.remove('fkhs-locked');
+    fkhsOriginalControls.delete(el);
   }
-}
 
+  function setQuizButtonVisibility(passed) {
+    var require = !!window.fkH5P?.require;
+    var bypass = !!window.fkH5P?.bypass;
+    if (!require) passed = true;
+    if (fkhsTransportBlocked) passed = false;
+    if (bypass) passed = true;
+    fkhsGateLocked = !passed;
+    bindGateHandlers();
 
-  function extractContentId(evt, stmt, fallbackCid) {
-    if (fallbackCid) return fallbackCid;
-    if (evt?.data?.instance?.contentId) {
-      var cid = parseInt(evt.data.instance.contentId, 10); if (!isNaN(cid)) return cid;
+    var tooltip = window.fkH5P?.i18n?.completeH5PFirst || 'Complete the H5P first';
+    var controls = new Set(document.querySelectorAll(fkhsActionSelector));
+    fkhsOriginalControls.forEach(function(original, el) {
+      if (passed || !controls.has(el)) restoreControl(el, original);
+    });
+    if (!passed) controls.forEach(function(el) {
+      if (!fkhsOriginalControls.has(el)) {
+        fkhsOriginalControls.set(el, { aria: el.getAttribute('aria-disabled'), title: el.title, tooltip: tooltip });
+      }
+      el.setAttribute('aria-disabled', 'true');
+      el.title = tooltip;
+      el.classList.add('fkhs-locked');
+      // Do not write native disabled: Sensei/video requirements own that state.
+    });
+    // Sensei documents this block as a status indicator with no action.
+    document.querySelectorAll(fkhsCompletedSelector).forEach(function(el) {
+      el.disabled = true;
+    });
+  }
+
+  function extractContentId(evt, stmt) {
+    var candidates = [];
+    var invalid = false;
+    function add(value) {
+      if (value === undefined || value === null) return;
+      var id = typeof value === 'number' ? value : (/^[1-9][0-9]*$/.test(value) ? Number(value) : NaN);
+      if (!Number.isSafeInteger(id) || id <= 0) invalid = true;
+      else candidates.push(id);
     }
-    var url = stmt?.object?.id || '';
-    var m = url.match(/[?&]id=(\d+)/) || url.match(/\/(\d+)(?:\/|\?|$)/);
-    if (m && m[1]) { var cid2 = parseInt(m[1], 10); if (!isNaN(cid2)) return cid2; }
-    var iframe = document.querySelector('.h5p-iframe[data-content-id]'); if (iframe && iframe.dataset.contentId) {
-      var cid3 = parseInt(iframe.dataset.contentId, 10); if (!isNaN(cid3)) return cid3;
-    }
-    var wrap = document.querySelector('.h5p-content[id^="h5p-"]'); if (wrap) {
-      var mm = wrap.id.match(/h5p-(\d+)/); if (mm && mm[1]) { var cid4 = parseInt(mm[1], 10); if (!isNaN(cid4)) return cid4; }
-    }
-    if (window.H5PIntegration?.contents) {
-      var keys = Object.keys(window.H5PIntegration.contents);
-      for (var i=0;i<keys.length;i++){ var k=keys[i]; var mm2=k.match(/^cid-(\d+)$/); if (mm2 && mm2[1]) { var cid5=parseInt(mm2[1],10); if(!isNaN(cid5)) return cid5; } }
-    }
-    return null;
+    add(evt?.data?.contentId);
+    add(evt?.data?.instance?.contentId);
+    var ext = stmt?.object?.definition?.extensions || {};
+    add(ext['http://h5p.org/x-api/h5p-local-content-id']);
+    add(ext['https://h5p.org/x-api/h5p-local-content-id']);
+    // Match the exact URL supplied by H5P; never guess from an arbitrary URL number
+    // or select the first activity in the DOM.
+    var url = stmt?.object?.id;
+    var contents = window.H5PIntegration?.contents || {};
+    Object.keys(contents).forEach(function (key) {
+      if (typeof url === 'string' && contents[key].url === url && /^cid-[1-9][0-9]*$/.test(key)) add(key.slice(4));
+    });
+    var ids = Array.from(new Set(candidates));
+    return !invalid && ids.length === 1 ? ids[0] : null;
+  }
+
+  function isNestedStatement(stmt) {
+    var ext = stmt?.object?.definition?.extensions || {};
+    return Object.prototype.hasOwnProperty.call(ext, 'http://h5p.org/x-api/h5p-subContentId') ||
+      Object.prototype.hasOwnProperty.call(ext, 'https://h5p.org/x-api/h5p-subContentId') ||
+      /[?&]subContentId=/i.test(stmt?.object?.id || '');
   }
 
     function onXAPI(event) {
       try {
         var stmt = event?.data?.statement;
-        if (!stmt) return;
+        if (!stmt || isNestedStatement(stmt)) return;
 
-        var cid = extractContentId(event, stmt, event?.data?.contentId);
+        var cid = extractContentId(event, stmt);
+        if (!cid) { fkhsInputError = true; syncTransport(); return; }
         var verb = (stmt?.verb?.id || '').toLowerCase();
 
         // Vurder om dette er "evaluering"
@@ -510,15 +562,8 @@ function fkhsSendSyntheticCompleted(cid) {
         // Post alltid original-eventet
         postXAPI(stmt, cid);
 
-        // (syntetisk completed for threshold==0 beholdes uendret)
-        var isActivity = /\/(attempted|progressed|experienced|interacted|initialized)$/.test(verb);
-        if (cid && isActivity && fkhsCompletionOnly.has(cid) && !fkhsSynthDone[cid]) {
-          clearTimeout(fkhsSynthTimers[cid]);
-          fkhsSynthTimers[cid] = setTimeout(function() {
-            fkhsSendSyntheticCompleted(cid);
-          }, 900);
-        }
       } catch (e) {
+        fkhsInputError = true; syncTransport();
         if (window.fkH5P?.debug) console.warn('[FKHS] onXAPI error', e);
       }
     }
@@ -528,39 +573,97 @@ function fkhsSendSyntheticCompleted(cid) {
 
 
   var fkhsBound = false;
-    function bind() {
-      if (fkhsBound) return;
-      if (window.H5P && H5P.externalDispatcher) {
-        H5P.externalDispatcher.on('xAPI', onXAPI);
-        fkhsBound = true;
-        if (window.fkH5P?.debug) console.log('[FKHS] Bound H5P xAPI listener');
-      } else {
-        setTimeout(bind, 300);
-      }
-    }
+  var fkhsBindTimer = null;
+  var fkhsBindChecks = 0;
+  var fkhsBindDeadline = 0;
+  var fkhsRefreshOnBind = false;
 
-  document.addEventListener('DOMContentLoaded', function(){
+  function checkH5PTracking() {
+    fkhsBindTimer = null;
+    if (fkhsBound || fkhsRuntimeState !== 'waiting') return;
+    if (Date.now() >= fkhsBindDeadline) {
+      fkhsRuntimeState = 'failed';
+      syncTransport();
+      return;
+    }
+    var dispatcher = window.H5P?.externalDispatcher;
+    if (typeof dispatcher?.on === 'function') {
+      try {
+        dispatcher.on('xAPI', onXAPI);
+        fkhsBound = true;
+        fkhsRuntimeState = 'ready';
+        syncTransport();
+        // A late/retried bind needs fresh progress, never a stale pre-wait gate.
+        if (fkhsRefreshOnBind || fkhsBindChecks > 0) fetchAndRenderH5PStatus();
+        return;
+      } catch (_) {
+        fkhsRuntimeState = 'failed';
+      }
+    } else if (fkhsBindChecks++ < 50) {
+      // One finite 15-second polling window. Only an explicit retry starts another.
+      fkhsBindTimer = setTimeout(checkH5PTracking, 300);
+      return;
+    } else {
+      fkhsRuntimeState = 'failed';
+    }
+    syncTransport();
+  }
+
+  function startH5PTracking(retry) {
+    if (fkhsBound || fkhsRuntimeState === 'waiting') return;
+    if (!retry && !window.fkH5P?.require) {
+      fkhsRuntimeState = 'unused';
+      return;
+    }
+    fkhsBindChecks = 0;
+    fkhsBindDeadline = Date.now() + 15000;
+    fkhsRefreshOnBind = !!retry;
+    fkhsRuntimeState = 'waiting';
+    syncTransport();
+    checkH5PTracking();
+  }
+
+  function boot(){
     if (window.fkH5P?.debug) console.debug('[FKHS] boot', window.fkH5P);
 
     setGate(false);
     setQuizButtonVisibility(window.fkhsGatePassed);
 
-    var mo = new MutationObserver(function(){ setQuizButtonVisibility(window.fkhsGatePassed); });
+    var gateRefreshPending = false;
+    var mo = new MutationObserver(function(records){
+      var selector = fkhsActionSelector + ',' + fkhsCompletedSelector;
+      var relevant = records.some(function(record) {
+        return Array.from(record.addedNodes).concat(Array.from(record.removedNodes)).some(function(node) {
+          return node.nodeType === 1 && (node.matches(selector) || node.querySelector(selector));
+        });
+      });
+      if (!relevant || gateRefreshPending) return;
+      gateRefreshPending = true;
+      Promise.resolve().then(function() {
+        gateRefreshPending = false;
+        setQuizButtonVisibility(window.fkhsGatePassed);
+      });
+    });
     mo.observe(document.body, { childList: true, subtree: true });
 
-    // 1) Hent status (fyller fkhsCompletionOnly)
+    startH5PTracking(false);
     fetchAndRenderH5PStatus();
-
-    // 2) Bind H5P-lytter litt etterpå (reduserer race mot fkhsCompletionOnly)
-    setTimeout(bind, 400);
-  });
+    window.addEventListener('beforeunload', function (event) {
+      if (fkhsQueue.length) { event.preventDefault(); event.returnValue = ''; }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else if (document.readyState) boot();
 
     function fetchAndRenderH5PStatus(){
+      var generation = ++fkhsStatusVersion;
+      fkhsStatusPending = true;
+      syncTransport();
       try{
         var base = (window.fkH5P?.restUrl || '').replace(/\/h5p-xapi$/, '/h5p-status');
         var q = '?lesson_id=' + encodeURIComponent(window.fkH5P?.lessonId || 0) + '&_ts=' + Date.now();
 
-        fetch(base + q, {
+        return requestJSON(base + q, {
           method: 'GET',
           credentials: 'same-origin',
           cache: 'no-store',
@@ -571,19 +674,10 @@ function fkhsSendSyntheticCompleted(cid) {
             'Expires': '0'
           }
         })
-        .then(function(r){ return r.ok ? r.json() : Promise.reject(r); })
         .then(function(json){
-          if (window.fkH5P?.debug) console.debug('[FKHS] status items length:', json.items?.length, json);
-          if (!json?.ok || !Array.isArray(json.items)) return;
-
-          // NEW: bygg/oppdater sett av completion-only (threshold==0)
-          fkhsCompletionOnly = new Set();
-          json.items.forEach(function(it){
-            if (typeof it.threshold === 'number' && it.threshold === 0) {
-              fkhsCompletionOnly.add(it.content_id);
-            }
-          });
-          fkhsCompletionReady = true;
+          if (generation !== fkhsStatusVersion) return false;
+          if (!Array.isArray(json.items)) throw { retryable: true, reason: 'invalid_status' };
+          fkhsStatusError = null; fkhsStatusPending = false;
           var overallPassed = true;
 
           json.items.forEach(function(item){
@@ -683,12 +777,17 @@ function fkhsSendSyntheticCompleted(cid) {
 
           // Statuspanel bruker samme gating-definisjon
           renderStatusPanelFromItems(json.items);
+          syncTransport();
+          return true;
 
         }).catch(function(err){
-          if (window.fkH5P?.debug) console.warn('[FKHS] status fetch failed', err);
+          if (generation !== fkhsStatusVersion) return false;
+          fkhsStatusPending = false; fkhsStatusError = err; syncTransport();
+          return false;
         });
       }catch(e){
-        if (window.fkH5P?.debug) console.warn('[FKHS] status error', e);
+        fkhsStatusPending = false; fkhsStatusError = { retryable: true }; syncTransport();
+        return Promise.resolve(false);
       }
     }
 

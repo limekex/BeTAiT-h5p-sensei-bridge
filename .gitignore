@@ -22,3 +22,4 @@ wp-content/plugins/*/vendor/
 # Build/output
 dist/
 build/
+artifacts/

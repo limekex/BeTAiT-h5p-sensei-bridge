@@ -7,7 +7,7 @@
  * - Validate payload and enrollment.
  * - Compute "passed" using server-side threshold policy:
  *     • threshold > 0  → score% ≥ threshold (fallback to result.success)
- *     • threshold == 0 → completion-only (fallback to success/verb)
+ *     • threshold == 0 → explicit root completion (no interaction timer)
  * - Persist attempt snapshot (including lesson title).
  * - DO NOT mark completion here (Sensei owns completion; we veto elsewhere).
  *
@@ -33,15 +33,22 @@ class FKHS_REST {
 				'permission_callback' => static function () { return is_user_logged_in(); },
 				'callback'            => array( __CLASS__, 'handle' ),
 				'args'                => array(
+						'event_id' => array(
+							'description' => __( 'Stable UUID for retries of this event.', 'h5p-sensei-bridge' ),
+							'type' => 'string',
+							'required' => false,
+						),
 					'lesson_id' => array(
 						'description' => __( 'Sensei lesson ID receiving this attempt.', 'h5p-sensei-bridge' ),
 						'type'        => 'integer',
+							'minimum'     => 1,
 						'required'    => true,
 					),
 					'contentId' => array(
-						'description' => __( 'H5P content ID if known.', 'h5p-sensei-bridge' ),
+							'description' => __( 'H5P content ID belonging to this lesson.', 'h5p-sensei-bridge' ),
 						'type'        => 'integer',
-						'required'    => false,
+							'minimum'     => 1,
+							'required'    => true,
 					),
 					'threshold' => array(
 						'description' => __( 'Client-side threshold hint (server overrides).', 'h5p-sensei-bridge' ),
@@ -65,7 +72,7 @@ class FKHS_REST {
 				'permission_callback' => function () { return is_user_logged_in(); },
 				'callback'            => array( __CLASS__, 'status' ),
 				'args'                => array(
-					'lesson_id' => array( 'type' => 'integer', 'required' => true ),
+						'lesson_id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ),
 				),
 			)
 		);
@@ -87,16 +94,132 @@ class FKHS_REST {
 		return $response;
 	}
 
+	private static function error_response( string $reason, int $status ): WP_REST_Response {
+		return self::apply_no_cache_headers( new WP_REST_Response( array( 'ok' => false, 'reason' => $reason ), $status ) );
+	}
+
+	/** Accept integer query strings without coercing booleans, arrays or fractions. */
+	private static function positive_id( $value ): int {
+		if ( ! is_int( $value ) && ! ( is_string( $value ) && preg_match( '/^[1-9][0-9]*$/D', $value ) ) ) {
+			return 0;
+		}
+		$id = filter_var( $value, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
+		return false === $id ? 0 : $id;
+	}
+
+	/** Both handlers call this before reading progress or accepting an attempt. */
+	private static function access_error( int $user_id, int $lesson_id ): ?WP_REST_Response {
+		if ( $user_id <= 0 ) {
+			return self::error_response( 'authentication_required', 401 );
+		}
+		if ( ! $lesson_id ) {
+			return self::error_response( 'invalid_lesson_id', 400 );
+		}
+		if ( ! FKHS_Sensei::access_api_available() || ! class_exists( 'H5P_Plugin' ) || ! shortcode_exists( 'h5p' ) ) {
+			return self::error_response( 'dependencies_unavailable', 503 );
+		}
+		if ( ! FKHS_Sensei::user_can_access_lesson( $user_id, $lesson_id ) ) {
+			// Do not distinguish inaccessible lessons from missing lessons.
+			return self::error_response( 'lesson_access_denied', 403 );
+		}
+		return null;
+	}
+
+	private static function is_object_array( $value ): bool {
+		if ( ! is_array( $value ) ) {
+			return false;
+		}
+		foreach ( array_keys( $value ) as $key ) {
+			if ( ! is_string( $key ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static function is_finite_number( $value ): bool {
+		return ( is_int( $value ) || is_float( $value ) ) && is_finite( (float) $value );
+	}
+
+	/** Validate fields consumed by this bridge, without demanding a full LRS statement. */
+	private static function valid_statement( $stmt ): bool {
+		if ( ! self::is_object_array( $stmt ) || empty( $stmt ) ) {
+			return false;
+		}
+		// Walk only the object paths read below or in completion inference.
+		$paths = array(
+			array( 'verb' ), array( 'result' ), array( 'result', 'score' ),
+			array( 'context' ), array( 'object' ), array( 'object', 'definition' ),
+			array( 'result', 'extensions' ), array( 'context', 'extensions' ),
+			array( 'object', 'definition', 'extensions' ), array( 'extensions' ),
+		);
+		foreach ( $paths as $path ) {
+			$node = $stmt;
+			foreach ( $path as $key ) {
+				if ( ! array_key_exists( $key, $node ) ) {
+					break;
+				}
+				$node = $node[ $key ];
+				if ( ! self::is_object_array( $node ) ) {
+					return false;
+				}
+			}
+		}
+		if ( ! isset( $stmt['verb']['id'] ) || ! is_string( $stmt['verb']['id'] ) || '' === trim( $stmt['verb']['id'] ) ) {
+			return false;
+		}
+		if ( isset( $stmt['object'] ) && array_key_exists( 'id', $stmt['object'] )
+			&& ( ! is_string( $stmt['object']['id'] ) || '' === trim( $stmt['object']['id'] ) ) ) {
+			return false;
+		}
+		$result = $stmt['result'] ?? array();
+		foreach ( array( 'success', 'completion' ) as $key ) {
+			if ( array_key_exists( $key, $result ) && ! is_bool( $result[ $key ] ) ) {
+				return false;
+			}
+		}
+		$score = $result['score'] ?? array();
+		foreach ( array( 'raw', 'max', 'min', 'scaled' ) as $key ) {
+			if ( array_key_exists( $key, $score ) && ! self::is_finite_number( $score[ $key ] ) ) {
+				return false;
+			}
+		}
+		if ( ( isset( $score['max'] ) && $score['max'] < 0 )
+			|| ( isset( $score['raw'], $score['max'] ) && $score['raw'] > $score['max'] )
+			|| ( isset( $score['min'], $score['max'] ) && $score['min'] > $score['max'] )
+			|| ( isset( $score['raw'], $score['min'] ) && $score['raw'] < $score['min'] )
+			|| ( isset( $score['scaled'] ) && ( $score['scaled'] < -1 || $score['scaled'] > 1 ) ) ) {
+			return false;
+		}
+		$bags = array( $result['extensions'] ?? array(), $stmt['context']['extensions'] ?? array(),
+			$stmt['object']['definition']['extensions'] ?? array(), $stmt['extensions'] ?? array() );
+		foreach ( $bags as $bag ) {
+			if ( array_key_exists( 'https://h5p.org/x-api/completed', $bag ) && ! is_bool( $bag['https://h5p.org/x-api/completed'] ) ) {
+				return false;
+			}
+			foreach ( array( 'https://h5p.org/x-api/progress', 'http://id.tincanapi.com/extension/progress' ) as $key ) {
+				if ( array_key_exists( $key, $bag ) && ( ! self::is_finite_number( $bag[ $key ] ) || $bag[ $key ] < 0 || $bag[ $key ] > 100 ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	public static function status( WP_REST_Request $req ) {
 		$user_id   = get_current_user_id();
-		$lesson_id = (int) $req->get_param( 'lesson_id' );
+		$lesson_id = self::positive_id( $req->get_param( 'lesson_id' ) );
 
-		if ( ! $user_id || ! $lesson_id ) {
-			$resp = new WP_REST_Response( array( 'ok' => false, 'reason' => 'missing_params' ), 400 );
-			return self::apply_no_cache_headers( $resp );
+		$error = self::access_error( $user_id, $lesson_id );
+		if ( $error ) {
+			return $error;
 		}
 
-		$items = FKHS_Progress::get_items( $user_id, $lesson_id );
+		try {
+			$items = FKHS_Progress::get_items( $user_id, $lesson_id );
+		} catch ( RuntimeException $error ) {
+			return self::error_response( 'progress_unavailable', 503 );
+		}
 		$gate  = FKHS_Progress::summarize( $items );
 		$resp  = new WP_REST_Response( array(
 			'ok' => true, 'items' => $items,
@@ -109,16 +232,50 @@ class FKHS_REST {
 	public static function handle( \WP_REST_Request $req ) {
 		$data      = $req->get_json_params();
 		$user_id   = get_current_user_id();
-		$lesson_id = isset( $data['lesson_id'] ) ? (int) $data['lesson_id'] : 0;
-		$stmt      = isset( $data['statement'] ) ? $data['statement'] : array();
-		$contentId = isset( $data['contentId'] ) ? (int) $data['contentId'] : null;
-
-		if ( ! $user_id || ! $lesson_id || empty( $stmt ) || ! is_array( $stmt ) ) {
-			return new \WP_REST_Response( array( 'ok' => false, 'reason' => __( 'Missing or invalid parameters.', 'h5p-sensei-bridge' ) ), 400 );
+		if ( ! self::is_object_array( $data ) ) {
+			return self::error_response( 'invalid_payload', 400 );
 		}
-
-		if ( ! FKHS_Sensei::user_is_enrolled_in_lesson( $user_id, $lesson_id ) ) {
-			return new \WP_REST_Response( array( 'ok' => false, 'reason' => __( 'User is not enrolled for this lesson.', 'h5p-sensei-bridge' ) ), 403 );
+		$lesson_id = self::positive_id( $data['lesson_id'] ?? null );
+		$stmt      = $data['statement'] ?? null;
+		$contentId = self::positive_id( $data['contentId'] ?? null );
+		$event_id = $data['event_id'] ?? null;
+		$error     = self::access_error( $user_id, $lesson_id );
+		if ( $error ) {
+			return $error;
+		}
+		if ( ! $contentId || ! self::valid_statement( $stmt ) ) {
+			return self::error_response( 'invalid_payload', 400 );
+		}
+		if ( array_key_exists( 'event_id', $data ) && ( ! is_string( $event_id ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iD', $event_id ) ) ) {
+			return self::error_response( 'invalid_event_id', 400 );
+		}
+		$event_id = $event_id === null ? null : strtolower( $event_id );
+		if ( ! in_array( $contentId, FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id ), true ) ) {
+			return self::error_response( 'content_not_in_lesson', 400 );
+		}
+		global $wpdb;
+		$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}h5p_contents WHERE id = %d", $contentId ) );
+		if ( ! $exists ) {
+			return self::error_response( 'content_unavailable', 400 );
+		}
+		$extensions = $stmt['object']['definition']['extensions'] ?? array();
+		foreach ( array( 'http://h5p.org/x-api/h5p-local-content-id', 'https://h5p.org/x-api/h5p-local-content-id' ) as $key ) {
+			if ( array_key_exists( $key, $extensions ) && self::positive_id( $extensions[ $key ] ) !== $contentId ) {
+				return self::error_response( 'content_identity_conflict', 400 );
+			}
+		}
+		$statement_json = wp_json_encode( self::canonical_payload( $stmt ) );
+		if ( false === $statement_json ) {
+			return self::error_response( 'invalid_payload', 400 );
+		}
+		$payload_hash = hash( 'sha256', $statement_json );
+		if ( $event_id !== null ) {
+			$previous = self::stored_event( $user_id, $lesson_id, $contentId, $event_id, $payload_hash );
+			if ( $previous ) { return $previous; }
+		}
+		// A nested question's score/completion is not the enclosing activity's result.
+		if ( self::is_nested_statement( $stmt ) ) {
+			return self::skipped_response( 'nested_activity' );
 		}
 
 		// Effektiv terskel (per leksjon + innhold + bruker).
@@ -135,7 +292,7 @@ class FKHS_REST {
 		$success = array_key_exists( 'success', $result ) ? (bool) $result['success'] : null;
 
 		// Robust completion-deteksjon (progress/extension-nøkler m.m.)
-		$completed = self::infer_completion_from_stmt( $stmt );
+		$completed = self::infer_completion_from_stmt( $stmt, $lesson_id, $contentId );
 
 		// Om success mangler, forsøk å tolke fra verb
 		if ( $success === null ) {
@@ -169,7 +326,7 @@ class FKHS_REST {
 		}
 
 		if ( $should_log ) {
-			self::store_attempt(
+			return self::store_attempt(
 				$user_id,
 				$lesson_id,
 				$contentId ?: null,
@@ -177,32 +334,22 @@ class FKHS_REST {
 				$max,
 				(int) $passed,
 				(int) (bool) $completed, // normaliser til 0/1
-				wp_json_encode( $stmt )
+				$statement_json,
+				$event_id,
+				$payload_hash
 			);
-
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				global $wpdb;
-				error_log( sprintf(
-					'[FKHS] insert user=%d lesson=%d cid=%s passed=%d completed=%d last_error=%s',
-					$user_id,
-					$lesson_id,
-					$contentId ?: 'NULL',
-					(int) $passed,
-					(int) (bool) $completed,
-					$wpdb->last_error ?: '(none)'
-				) );
-			}
 		}
 
-		return new \WP_REST_Response( array( 'ok' => true ), 200 );
+		return self::skipped_response( (float) $threshold === 0.0 && empty( $completed ) ? 'completion_pending' : 'filtered' );
 	}
 
-	private static function store_attempt( $user_id, $lesson_id, $content_id, $raw, $max, $passed, $completed, $statement_json ) {
+	private static function store_attempt( $user_id, $lesson_id, $content_id, $raw, $max, $passed, $completed, $statement_json, $event_id, $payload_hash ) {
 		global $wpdb;
 		$table        = $wpdb->prefix . FKHS_TABLE;
 		$lesson_title = get_the_title( $lesson_id );
 
-		$wpdb->insert(
+		$previous_suppression = $wpdb->suppress_errors( true );
+		$inserted = $wpdb->insert(
 			$table,
 			array(
 				'user_id'      => (int) $user_id,
@@ -214,119 +361,98 @@ class FKHS_REST {
 				'passed'       => $passed ? 1 : 0,
 				'completed'    => $completed ? 1 : 0,
 				'statement'    => $statement_json,
+				'event_id'     => $event_id,
+				'payload_hash' => $payload_hash,
 				'created_at'   => current_time( 'mysql' ),
 			),
-			array( '%d', '%d', '%s', '%d', '%f', '%f', '%d', '%d', '%s', '%s' )
+			array( '%d', '%d', '%s', '%d', '%f', '%f', '%d', '%d', '%s', '%s', '%s', '%s' )
 		);
+		$wpdb->suppress_errors( $previous_suppression );
+		if ( 1 !== $inserted ) {
+			// Unique index arbitrates concurrent delivery of the same event.
+			if ( $event_id !== null ) {
+				$previous = self::stored_event( $user_id, $lesson_id, $content_id, $event_id, $payload_hash );
+				if ( $previous ) { return $previous; }
+			}
+			return self::error_response( 'storage_failed', 500 );
+		}
+		return self::saved_response( (int) $wpdb->insert_id, false );
 	}
 
 
-      /**
-     * Infer completion from an xAPI statement.
-     * Checks (in order):
-     *  - explicit result.completion === true
-     *  - verb.id ends with '/completed' (or '/answered' as some libs finalize with it)
-     *  - known extension bags anywhere we can reasonably expect them:
-     *      • result.extensions
-     *      • context.extensions
-     *      • object.definition.extensions   ← NEW (Course Presentation often uses this)
-     *      • top-level extensions (rare)
-     *    Keys we look for:
-     *      • https://h5p.org/x-api/completed  (bool)
-     *      • https://h5p.org/x-api/progress   (0–100 or 0–1)
-     *      • http://id.tincanapi.com/extension/progress (some libs)
-     * If verb === progressed and progress >= 100% (or >= 0.999), treat as completed.
-     *
-     * Returns: bool|null  (null if we found no signal)
-     */
-    private static function infer_completion_from_stmt( array $stmt ) : ?bool {
-      // 1) result.completion (canonical)
-      if ( isset( $stmt['result'] ) && is_array( $stmt['result'] ) && array_key_exists( 'completion', $stmt['result'] ) ) {
-        return (bool) $stmt['result']['completion'];
-      }
+	private static function canonical_payload( $value ) {
+		if ( ! is_array( $value ) ) { return $value; }
+		if ( self::is_object_array( $value ) ) { ksort( $value ); }
+		foreach ( $value as $key => $item ) { $value[ $key ] = self::canonical_payload( $item ); }
+		return $value;
+	}
 
-      // 2) verb: completed (or answered used as finalization)
-      $verb_id = isset( $stmt['verb']['id'] ) ? (string) $stmt['verb']['id'] : '';
-      if ( $verb_id && preg_match( '#/(completed|answered)$#', $verb_id ) ) {
-        return true;
-      }
+	private static function saved_response( int $attempt_id, bool $duplicate ): WP_REST_Response {
+		return self::apply_no_cache_headers( new WP_REST_Response( array(
+			'ok' => true, 'stored' => true, 'duplicate' => $duplicate, 'attempt_id' => $attempt_id,
+		), 200 ) );
+	}
 
-      // Helper: try to read completion/progress from an extensions bag
-      $scan_exts = static function( $exts ) : array {
-        $out = array( 'completed' => null, 'progress' => null );
-        if ( ! is_array( $exts ) ) return $out;
+	private static function skipped_response( string $reason ): WP_REST_Response {
+		return self::apply_no_cache_headers( new WP_REST_Response( array(
+			'ok' => true, 'stored' => false, 'skipped' => true, 'reason' => $reason,
+		), 200 ) );
+	}
 
-        // boolean completion flag used by several H5P libs
-        $completed_keys = array(
-          'https://h5p.org/x-api/completed',
-        );
-        foreach ( $completed_keys as $k ) {
-          if ( array_key_exists( $k, $exts ) ) {
-            $out['completed'] = (bool) $exts[ $k ];
-            break;
-          }
-        }
+	/** Null means no matching event. Database failures must never look like a miss. */
+	private static function stored_event( int $user, int $lesson, int $content, string $event, string $hash ): ?WP_REST_Response {
+		global $wpdb;
+		$table = $wpdb->prefix . FKHS_TABLE;
+		$suppressed = $wpdb->suppress_errors( true );
+		$row = $wpdb->get_row( $wpdb->prepare(
+			"SELECT id, payload_hash FROM {$table} WHERE user_id=%d AND lesson_id=%d AND content_id=%d AND event_id=%s",
+			$user, $lesson, $content, $event
+		), ARRAY_A );
+		$error = $wpdb->last_error;
+		$wpdb->suppress_errors( $suppressed );
+		if ( $error ) { return self::error_response( 'storage_unavailable', 503 ); }
+		if ( ! $row ) { return null; }
+		if ( ! hash_equals( (string) $row['payload_hash'], $hash ) ) {
+			return self::error_response( 'event_id_conflict', 409 );
+		}
+		return self::saved_response( (int) $row['id'], true );
+	}
 
-        // progress (either 0..100 or 0..1) — try multiple keys
-        $progress_keys = array(
-          'https://h5p.org/x-api/progress',
-          'http://id.tincanapi.com/extension/progress',
-        );
-        foreach ( $progress_keys as $k ) {
-          if ( array_key_exists( $k, $exts ) && is_numeric( $exts[ $k ] ) ) {
-            $out['progress'] = (float) $exts[ $k ];
-            break;
-          }
-        }
+	private static function is_nested_statement( array $stmt ): bool {
+		$ext = $stmt['object']['definition']['extensions'] ?? array();
+		return array_key_exists( 'http://h5p.org/x-api/h5p-subContentId', $ext )
+			|| array_key_exists( 'https://h5p.org/x-api/h5p-subContentId', $ext )
+			|| (bool) preg_match( '/[?&]subContentId=/i', $stmt['object']['id'] ?? '' );
+	}
 
-        return $out;
-      };
-
-      // 3) result.extensions
-      if ( isset( $stmt['result']['extensions'] ) ) {
-        $fx = $scan_exts( $stmt['result']['extensions'] );
-        if ( $fx['completed'] !== null ) return (bool) $fx['completed'];
-        if ( is_numeric( $fx['progress'] ) ) {
-          $prog = (float) $fx['progress'];
-          if ( $prog >= 100.0 || $prog >= 0.999 ) return true;
-        }
-      }
-
-      // 4) context.extensions (many H5P libs)
-      if ( isset( $stmt['context']['extensions'] ) ) {
-        $fx = $scan_exts( $stmt['context']['extensions'] );
-        if ( $fx['completed'] !== null ) return (bool) $fx['completed'];
-        if ( is_numeric( $fx['progress'] ) ) {
-          $prog = (float) $fx['progress'];
-          if ( $prog >= 100.0 || $prog >= 0.999 ) return true;
-        }
-      }
-
-      // 5) object.definition.extensions  ← NEW: Course Presentation often uses this
-      if ( isset( $stmt['object']['definition']['extensions'] ) ) {
-        $fx = $scan_exts( $stmt['object']['definition']['extensions'] );
-        if ( $fx['completed'] !== null ) return (bool) $fx['completed'];
-        if ( is_numeric( $fx['progress'] ) ) {
-          $prog = (float) $fx['progress'];
-          if ( $prog >= 100.0 || $prog >= 0.999 ) return true;
-        }
-      }
-
-      // 6) top-level extensions (rare, but cheap to check)
-      if ( isset( $stmt['extensions'] ) ) {
-        $fx = $scan_exts( $stmt['extensions'] );
-        if ( $fx['completed'] !== null ) return (bool) $fx['completed'];
-        if ( is_numeric( $fx['progress'] ) ) {
-          $prog = (float) $fx['progress'];
-          if ( $prog >= 100.0 || $prog >= 0.999 ) return true;
-        }
-      }
-
-      // 7) If verb is progressed and we found no bags above, we can’t infer.
-      // (We only mark completed on progressed if we *saw* progress >= 100.)
-      return null;
-    }
-
-
-
+	/** Explicit root completion wins. Progress requires an explicitly configured scale. */
+	private static function infer_completion_from_stmt( array $stmt, int $lesson_id = 0, int $content_id = 0 ): ?bool {
+		if ( self::is_nested_statement( $stmt ) ) { return null; }
+		if ( array_key_exists( 'completion', $stmt['result'] ?? array() ) ) {
+			return $stmt['result']['completion'];
+		}
+		$bags = array( $stmt['result']['extensions'] ?? array(), $stmt['context']['extensions'] ?? array(),
+			$stmt['object']['definition']['extensions'] ?? array(), $stmt['extensions'] ?? array() );
+		$explicit = null;
+		foreach ( $bags as $bag ) {
+			if ( array_key_exists( 'https://h5p.org/x-api/completed', $bag ) ) {
+				if ( false === $bag['https://h5p.org/x-api/completed'] ) { return false; }
+				$explicit = true;
+			}
+		}
+		if ( $explicit !== null ) { return $explicit; }
+		if ( preg_match( '#/completed$#', $stmt['verb']['id'] ?? '' ) ) { return true; }
+		foreach ( $bags as $bag ) {
+			foreach ( array( 'https://h5p.org/x-api/progress', 'http://id.tincanapi.com/extension/progress' ) as $key ) {
+				if ( ! isset( $bag[ $key ] ) ) { continue; }
+				// No guessing between 1% and a full 0..1 ratio. Configure only after
+				// checking real events from this activity/library on staging.
+				$scale = apply_filters( 'fkhs_completion_progress_scale', null, $key, $stmt, $lesson_id, $content_id );
+				$value = $bag[ $key ];
+				if ( 'percent' === $scale && $value >= 0 && $value <= 100 ) { return $value === 100 || $value === 100.0; }
+				if ( 'ratio' === $scale && $value >= 0 && $value <= 1 ) { return $value === 1 || $value === 1.0; }
+			}
+		}
+		return null;
+	}
 }

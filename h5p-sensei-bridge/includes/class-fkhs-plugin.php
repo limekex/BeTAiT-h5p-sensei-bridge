@@ -35,51 +35,15 @@ class FKHS_Plugin {
 	 * @return void
 	 */
 	public static function activate() {
-		global $wpdb;
-
-		$table   = $wpdb->prefix . FKHS_TABLE;
-		$charset = $wpdb->get_charset_collate();
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-		// NOTE: dbDelta is idempotent; safe to run on every activation.
-		$sql = "CREATE TABLE {$table} (
-			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-			user_id BIGINT UNSIGNED NOT NULL,
-			lesson_id BIGINT UNSIGNED NOT NULL,
-			lesson_title VARCHAR(255) NULL,
-			content_id BIGINT UNSIGNED NULL,
-			raw_score FLOAT NULL,
-			max_score FLOAT NULL,
-			passed TINYINT(1) DEFAULT 0,
-			completed TINYINT(1) DEFAULT 0,
-			statement LONGTEXT NULL,
-			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			PRIMARY KEY (id),
-			KEY user_lesson (user_id, lesson_id),
-			KEY created_at (created_at)
-		) {$charset};";
-
-		dbDelta( $sql );
-
-		// Remember current DB schema version for future upgrades.
-		update_option( 'fkhs_db_ver', FKHS_DB_VER );
+		self::maybe_upgrade();
 	}
 
-	/**
-	 * Runs when FKHS_DB_VER changes (called from admin_init in main file).
-	 * Keeps the table in sync with the latest schema using dbDelta.
-	 *
-	 * @return void
-	 */
-	public static function maybe_upgrade() {
+	/** Add nullable identity columns; preserve all existing attempts and flags. */
+	public static function maybe_upgrade(): bool {
 		global $wpdb;
-
-		$table   = $wpdb->prefix . FKHS_TABLE;
+		$table = $wpdb->prefix . FKHS_TABLE;
 		$charset = $wpdb->get_charset_collate();
-
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
 		$sql = "CREATE TABLE {$table} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			user_id BIGINT UNSIGNED NOT NULL,
@@ -91,13 +55,29 @@ class FKHS_Plugin {
 			passed TINYINT(1) DEFAULT 0,
 			completed TINYINT(1) DEFAULT 0,
 			statement LONGTEXT NULL,
+			event_id CHAR(36) NULL,
+			payload_hash CHAR(64) NULL,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			PRIMARY KEY (id),
+			PRIMARY KEY  (id),
 			KEY user_lesson (user_id, lesson_id),
-			KEY created_at (created_at)
+			KEY created_at (created_at),
+			UNIQUE KEY event_identity (user_id, lesson_id, content_id, event_id)
 		) {$charset};";
-
 		dbDelta( $sql );
+
+		// A failed DDL operation must not mark this schema version as installed.
+		$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$table}" );
+		$index = $wpdb->get_results( "SHOW INDEX FROM {$table} WHERE Key_name = 'event_identity'", ARRAY_A );
+		if ( ! in_array( 'event_id', $columns, true ) || ! in_array( 'payload_hash', $columns, true ) || count( $index ) !== 4 ) {
+			return false;
+		}
+		foreach ( $index as $part ) {
+			if ( (int) $part['Non_unique'] !== 0 ) { return false; }
+		}
+		usort( $index, static function ( $a, $b ) { return (int) $a['Seq_in_index'] <=> (int) $b['Seq_in_index']; } );
+		if ( array_column( $index, 'Column_name' ) !== array( 'user_id', 'lesson_id', 'content_id', 'event_id' ) ) { return false; }
+		update_option( 'fkhs_db_ver', FKHS_DB_VER );
+		return true;
 	}
 
 	/**
@@ -167,11 +147,25 @@ class FKHS_Plugin {
 			'restUrl'   => esc_url_raw( rest_url( 'fkhs/v1/h5p-xapi' ) ),
 			'nonce'     => wp_create_nonce( 'wp_rest' ),
 			'lessonId'  => (int) $lesson_id,
+				'loginUrl'  => esc_url_raw( wp_login_url( get_permalink( $lesson_id ) ) ),
 			'threshold' => (float) $threshold,
 			'require'   => (bool) $require,
 			'debug'     => (bool) WP_DEBUG,
 			'bypass'    => (bool) ( current_user_can( 'manage_sensei_grades' ) || current_user_can( 'manage_options' ) ),
 			'i18n' => array(
+          'saving' => __( 'Saving your activity… Keep this page open.', 'h5p-sensei-bridge' ),
+          'activitySaved' => __( 'Your activity is saved.', 'h5p-sensei-bridge' ),
+          'saveFailed' => __( 'Your activity has not been confirmed saved. Keep this page open and retry.', 'h5p-sensei-bridge' ),
+          'saveUnconfirmed' => __( 'Saving could not be confirmed. Reload the page to check progress before repeating the activity.', 'h5p-sensei-bridge' ),
+          'statusFailed' => __( 'Progress could not be checked. Retry before continuing.', 'h5p-sensei-bridge' ),
+          'checkingProgress' => __( 'Checking progress…', 'h5p-sensei-bridge' ),
+          'sessionExpired' => __( 'Your session or access has expired. Sign in, then reload this page and repeat any unsaved activity.', 'h5p-sensei-bridge' ),
+          'signInAgain' => __( 'Sign in in a new tab', 'h5p-sensei-bridge' ),
+          'eventNotRecorded' => __( 'An activity event could not be recorded. Reload the page and repeat the activity.', 'h5p-sensei-bridge' ),
+          'retrySaving' => __( 'Retry', 'h5p-sensei-bridge' ),
+          'h5pWaiting' => __( 'Waiting for H5P tracking to start…', 'h5p-sensei-bridge' ),
+          'h5pUnavailable' => __( 'H5P tracking could not start. Retry, or reload this page before repeating the activity.', 'h5p-sensei-bridge' ),
+          'retryH5P' => __( 'Retry H5P tracking', 'h5p-sensei-bridge' ),
           // Tooltips / sperrer
           'completeH5PFirst'     => __( 'Complete the H5P first', 'h5p-sensei-bridge' ),
           'blockedNoticeQuiz'    => __( 'You need to pass the in-lesson tasks before you can take the quiz.', 'h5p-sensei-bridge' ),

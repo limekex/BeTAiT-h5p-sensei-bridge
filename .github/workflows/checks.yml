@@ -2,28 +2,58 @@ name: Bridge regression checks
 on:
   pull_request:
   push:
-    branches: [main, develop, 'review/**']
+    branches: [main, develop, 'review/**', 'fix/**', 'feature/**']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   regression:
-    runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php }} regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.0', '8.2', '8.4', '8.5']
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: ${{ matrix.php }}
           coverage: none
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: PHP syntax
-        run: find h5p-sensei-bridge tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: PHP syntax and regressions
+        run: bash tests/php-checks.sh
       - name: JavaScript syntax
         run: |
           node --check h5p-sensei-bridge/assets/js/h5p-sensei-bridge.js
           node --check h5p-sensei-bridge/assets/js/h5p-sensei-admin-report.js
-      - name: Regression tests
+      - name: JavaScript regressions
+        run: node --test tests/*.test.cjs
+  integration:
+    name: Integration ${{ matrix.profile }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [wp69-php82, wp71-php82, wp71-php84]
+    steps:
+      - uses: actions/checkout@v4
+      - name: WordPress, Sensei, H5P and MariaDB integration
+        env:
+          FKHS_TEST_PROFILE: ${{ matrix.profile }}
         run: |
-          php tests/progress.php
-          node --test tests/gate.test.cjs
+          mkdir -p artifacts/integration
+          set -o pipefail
+          bash tests/integration/run.sh "$FKHS_TEST_PROFILE" 2>&1 | tee "artifacts/integration/$FKHS_TEST_PROFILE.log"
+      - name: Retain integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-${{ matrix.profile }}
+          path: artifacts/integration/
+          if-no-files-found: warn
+          retention-days: 14
