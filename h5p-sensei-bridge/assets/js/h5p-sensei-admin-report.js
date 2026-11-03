@@ -3,6 +3,9 @@
 
   // ---------- i18n: kildestrenger per nøkkel ----------
   var MSG = {
+    loading: 'Loading attempts…',
+    loadError: 'Could not load attempts. Retry, or sign in again if your session expired.',
+    retry: 'Retry',
     sort: 'Sort',
     clickToFilter: 'Click to filter',
     filteredClickToEdit: 'Filtered – click to edit',
@@ -50,6 +53,11 @@ function t(key, fallback) {
   var TABLE_ID = 'fkhs-report-table';
   var PAGE_SIZES = [10, 25, 50, 100, 200];
 
+  var remote = !!(window.fkhsAdmin && window.fkhsAdmin.url);
+  var totalRows = 0;
+  var requestId = 0;
+  var pendingController = null;
+  var initialized = false;
   var rows = [];
   var filtered = [];
   var sortKey = 'date';
@@ -236,7 +244,59 @@ function t(key, fallback) {
   }
 
   // Reorders DOM i henhold til filtrering/sortering/paginering
+  // The production report requests only a bounded page. The local DOM path remains
+  // for embedded/static reports; it is never used to search production history.
+  async function loadPage() {
+    var id = ++requestId;
+    if (pendingController) pendingController.abort();
+    pendingController = new AbortController();
+    var controller = pendingController;
+    var timeout = setTimeout(function(){ controller.abort(); }, 20000);
+    var table = document.getElementById(TABLE_ID);
+    var info = $('#fkhs-page-info');
+    var retry = $('#fkhs-report-retry');
+    table.setAttribute('aria-busy', 'true');
+    $('tbody', table).replaceChildren();
+    info.textContent = t('loading');
+    var pagingFocus = ['fkhs-prev', 'fkhs-next', 'fkhs-report-retry'].includes(document.activeElement.id) ? document.activeElement : null;
+    retry.hidden = true;
+    $('#fkhs-prev').disabled = true; $('#fkhs-next').disabled = true;
+    // Disabling the focused pager button otherwise drops keyboard focus onto body.
+    if (pagingFocus) info.focus({preventScroll:true});
+    var params = new URLSearchParams(Object.assign({}, filters, {
+      page: page, per_page: pageSize, sort: sortKey, direction: sortDir
+    }));
+    try {
+      var response = await fetch(window.fkhsAdmin.url + (window.fkhsAdmin.url.includes('?') ? '&' : '?') + params, {
+        credentials: 'same-origin', cache: 'no-store',
+        headers: {'X-WP-Nonce': window.fkhsAdmin.nonce}, signal: pendingController.signal
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      var data = await response.json();
+      if (id !== requestId) return;
+      if (!data || typeof data.html !== 'string' || !Number.isInteger(data.total) || data.total < 0 || !Number.isInteger(data.page) || data.page < 1 || data.per_page !== pageSize) throw new Error('Invalid report');
+      // HTML is escaped by the authenticated same-origin report renderer.
+      $('tbody', table).innerHTML = data.html;
+      totalRows = data.total; page = data.page;
+      var start = (page - 1) * pageSize;
+      info.textContent = totalRows ? (start + 1) + '–' + Math.min(totalRows, start + pageSize) + ' / ' + totalRows : '0 / 0';
+      $('#fkhs-prev').disabled = page <= 1;
+      $('#fkhs-next').disabled = start + pageSize >= totalRows;
+      if (pagingFocus && document.activeElement === info && !pagingFocus.disabled && !pagingFocus.hidden) pagingFocus.focus({preventScroll:true});
+    } catch (error) {
+      if (id !== requestId) return;
+      totalRows = 0;
+      info.textContent = t('loadError');
+      retry.hidden = false;
+      if (pagingFocus && document.activeElement === info) retry.focus({preventScroll:true});
+    } finally {
+      clearTimeout(timeout);
+      if (id === requestId) table.removeAttribute('aria-busy');
+    }
+  }
+
   function renderPage() {
+    if (remote) { loadPage(); return; }
     var table = document.getElementById(TABLE_ID);
     if (!table) return;
     var tbody = $('tbody', table);
@@ -280,7 +340,7 @@ function t(key, fallback) {
 
     $all('thead th', table).forEach(function(th){
       var key = th.getAttribute('data-key');
-      if (!key || key === 'h5p') return;
+      if (!key || key === 'h5p' || (remote && key === 'criterion')) return;
       var columnLabel = th.textContent.trim();
 
       th.classList.add('fkhs-header');
@@ -548,9 +608,10 @@ function t(key, fallback) {
     info.id='fkhs-page-info';
     info.className='fkhs-pill';
     info.setAttribute('role','status');
+    info.tabIndex = -1;
 
     var next = btn(t('next') + ' ›', function(){
-      var total = filtered.length; var pages = Math.max(1, Math.ceil(total/pageSize));
+      var total = remote ? totalRows : filtered.length; var pages = Math.max(1, Math.ceil(total/pageSize));
       if (page < pages) { page++; renderPage(); }
     });
 
@@ -571,6 +632,10 @@ function t(key, fallback) {
     });
 
     bar.append(reset, prev, info, next, sizeSel);
+    if (remote) {
+      var retry = btn(t('retry'), function(){ loadPage(); });
+      retry.id = 'fkhs-report-retry'; retry.hidden = true; bar.appendChild(retry);
+    }
 
     var table = document.getElementById(TABLE_ID);
     var anchor = table && (table.closest('.fkhs-report-scroll') || table);
@@ -579,7 +644,8 @@ function t(key, fallback) {
 
   function init() {
     var table = document.getElementById(TABLE_ID);
-    if (!table) return;
+    if (!table || initialized) return;
+    initialized = true;
 
     injectStyles();
     parseRows();

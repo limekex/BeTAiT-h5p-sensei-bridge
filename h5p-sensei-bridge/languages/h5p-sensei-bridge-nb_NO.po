@@ -3,16 +3,17 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: BeTAiT H5P → Sensei Bridge 0.1.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/h5p-sensei-bridge\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/h5p-sensei-"
+"bridge\n"
+"POT-Creation-Date: 2026-11-03T15:50:32+00:00\n"
+"PO-Revision-Date: 2026-11-03 16:30+0100\n"
 "Last-Translator: BeTAiT\n"
 "Language-Team: Norsk bokmål\n"
 "Language: nb_NO\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T15:26:13+00:00\n"
-"PO-Revision-Date: 2026-11-03 16:30+0100\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: h5p-sensei-bridge\n"
 
@@ -23,8 +24,13 @@ msgstr "BeTAiT H5P → Sensei Bridge"
 
 #. Description of the plugin
 #: h5p-sensei-bridge.php
-msgid "Captures H5P xAPI results for logged-in users and enforces \"pass to complete\" in Sensei LMS. Stores attempts and provides an admin report (MVP)."
-msgstr "Registrerer H5P-resultater for innloggede brukere og krever bestått aktivitet før fullføring i Sensei LMS. Lagrer forsøk og viser en administratorrapport."
+msgid ""
+"Captures H5P xAPI results for logged-in users and enforces \"pass to "
+"complete\" in Sensei LMS. Stores attempts and provides an admin report (MVP)."
+msgstr ""
+"Registrerer H5P-resultater for innloggede brukere og krever bestått "
+"aktivitet før fullføring i Sensei LMS. Lagrer forsøk og viser en "
+"administratorrapport."
 
 #. Author of the plugin
 #: h5p-sensei-bridge.php
@@ -36,8 +42,11 @@ msgid "H5P → Sensei Bridge"
 msgstr "H5P → Sensei Bridge"
 
 #: includes/class-fkhs-metabox.php:71
-msgid "Set thresholds per H5P. Use 0 for no pass requirement (completion-only)."
-msgstr "Angi terskel for hver H5P-aktivitet. Bruk 0 for kun å kreve fullføring etter at et forsøk er registrert."
+msgid ""
+"Set thresholds per H5P. Use 0 for no pass requirement (completion-only)."
+msgstr ""
+"Angi terskel for hver H5P-aktivitet. Bruk 0 for kun å kreve fullføring etter "
+"at et forsøk er registrert."
 
 #: includes/class-fkhs-metabox.php:74
 msgid "No H5P items detected in this lesson yet."
@@ -65,12 +74,19 @@ msgid "Your activity is saved."
 msgstr "Aktiviteten din er lagret."
 
 #: includes/class-fkhs-plugin.php:157
-msgid "Your activity has not been confirmed saved. Keep this page open and retry."
-msgstr "Lagringen av aktiviteten er ikke bekreftet. Hold denne siden åpen og prøv igjen."
+msgid ""
+"Your activity has not been confirmed saved. Keep this page open and retry."
+msgstr ""
+"Lagringen av aktiviteten er ikke bekreftet. Hold denne siden åpen og prøv "
+"igjen."
 
 #: includes/class-fkhs-plugin.php:158
-msgid "Saving could not be confirmed. Reload the page to check progress before repeating the activity."
-msgstr "Lagringen kunne ikke bekreftes. Last siden på nytt for å sjekke fremdriften før du gjentar aktiviteten."
+msgid ""
+"Saving could not be confirmed. Reload the page to check progress before "
+"repeating the activity."
+msgstr ""
+"Lagringen kunne ikke bekreftes. Last siden på nytt for å sjekke fremdriften "
+"før du gjentar aktiviteten."
 
 #: includes/class-fkhs-plugin.php:159
 msgid "Progress could not be checked. Retry before continuing."
@@ -81,18 +97,26 @@ msgid "Checking progress…"
 msgstr "Kontrollerer fremdriften …"
 
 #: includes/class-fkhs-plugin.php:161
-msgid "Your session or access has expired. Sign in, then reload this page and repeat any unsaved activity."
-msgstr "Økten eller tilgangen din har utløpt. Logg inn, last siden på nytt og gjenta aktiviteter som ikke er lagret."
+msgid ""
+"Your session or access has expired. Sign in, then reload this page and "
+"repeat any unsaved activity."
+msgstr ""
+"Økten eller tilgangen din har utløpt. Logg inn, last siden på nytt og gjenta "
+"aktiviteter som ikke er lagret."
 
 #: includes/class-fkhs-plugin.php:162
 msgid "Sign in in a new tab"
 msgstr "Logg inn i en ny fane"
 
 #: includes/class-fkhs-plugin.php:163
-msgid "An activity event could not be recorded. Reload the page and repeat the activity."
-msgstr "En aktivitetshendelse kunne ikke registreres. Last siden på nytt og gjenta aktiviteten."
+msgid ""
+"An activity event could not be recorded. Reload the page and repeat the "
+"activity."
+msgstr ""
+"En aktivitetshendelse kunne ikke registreres. Last siden på nytt og gjenta "
+"aktiviteten."
 
-#: includes/class-fkhs-plugin.php:164
+#: includes/class-fkhs-plugin.php:164 includes/class-fkhs-reporter.php:90
 msgid "Retry"
 msgstr "Prøv igjen"
 
@@ -101,8 +125,12 @@ msgid "Waiting for H5P tracking to start…"
 msgstr "Venter på at registreringen av H5P-aktivitet skal starte …"
 
 #: includes/class-fkhs-plugin.php:166
-msgid "H5P tracking could not start. Retry, or reload this page before repeating the activity."
-msgstr "Registreringen av H5P-aktivitet kunne ikke starte. Prøv igjen, eller last siden på nytt før du gjentar aktiviteten."
+msgid ""
+"H5P tracking could not start. Retry, or reload this page before repeating "
+"the activity."
+msgstr ""
+"Registreringen av H5P-aktivitet kunne ikke starte. Prøv igjen, eller last "
+"siden på nytt før du gjentar aktiviteten."
 
 #: includes/class-fkhs-plugin.php:167
 msgid "Retry H5P tracking"
@@ -117,7 +145,8 @@ msgid "You need to pass the in-lesson tasks before you can take the quiz."
 msgstr "Du må bestå oppgavene i leksjonen før du kan ta quizen."
 
 #: includes/class-fkhs-plugin.php:171
-msgid "You need to pass the in-lesson tasks before you can complete the lesson."
+msgid ""
+"You need to pass the in-lesson tasks before you can complete the lesson."
 msgstr "Du må bestå oppgavene i leksjonen før du kan fullføre den."
 
 #: includes/class-fkhs-plugin.php:175
@@ -128,7 +157,9 @@ msgstr "Oppgaven er bestått: %1$s av %2$s poeng (godkjent)."
 #: includes/class-fkhs-plugin.php:176
 #, php-format
 msgid "Not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry."
-msgstr "Ikke bestått. Beste resultat: %1$s av %2$s. Krav: %3$s. Velg for å prøve igjen."
+msgstr ""
+"Ikke bestått. Beste resultat: %1$s av %2$s. Krav: %3$s. Velg for å prøve "
+"igjen."
 
 #: includes/class-fkhs-plugin.php:177
 msgid "This task is completed."
@@ -146,8 +177,7 @@ msgstr "Øv igjen"
 msgid "Retry now"
 msgstr "Prøv igjen nå"
 
-#: includes/class-fkhs-plugin.php:181
-#: includes/class-fkhs-reporter.php:86
+#: includes/class-fkhs-plugin.php:181 includes/class-fkhs-reporter.php:92
 msgid "Close"
 msgstr "Lukk"
 
@@ -202,176 +232,191 @@ msgstr "Ikke fullført ennå"
 msgid "View task"
 msgstr "Vis oppgaven"
 
-#: includes/class-fkhs-reporter.php:38
-#: includes/class-fkhs-reporter.php:39
+#: includes/class-fkhs-report-query.php:16
+#: includes/class-fkhs-report-query.php:99
+msgid "You cannot view this report."
+msgstr "Du har ikke tilgang til denne rapporten."
+
+#: includes/class-fkhs-report-query.php:58
+msgid "Invalid report filters."
+msgstr "Ugyldige rapportfiltre."
+
+#: includes/class-fkhs-report-query.php:126 includes/class-fkhs-reporter.php:89
+msgid ""
+"Could not load attempts. Retry, or sign in again if your session expired."
+msgstr "Kunne ikke laste forsøk. Prøv igjen, eller logg inn på nytt hvis økten er utløpt."
+
+#: includes/class-fkhs-reporter.php:39 includes/class-fkhs-reporter.php:40
 msgid "H5P → Sensei"
 msgstr "H5P → Sensei"
 
-#: includes/class-fkhs-reporter.php:85
+#: includes/class-fkhs-reporter.php:88
+msgid "Loading attempts…"
+msgstr "Laster forsøk…"
+
+#: includes/class-fkhs-reporter.php:91
 msgid "Sort"
 msgstr "Sorter"
 
-#: includes/class-fkhs-reporter.php:87
+#: includes/class-fkhs-reporter.php:93
 msgid "From"
 msgstr "Fra"
 
-#: includes/class-fkhs-reporter.php:88
+#: includes/class-fkhs-reporter.php:94
 msgid "To"
 msgstr "Til"
 
-#: includes/class-fkhs-reporter.php:89
+#: includes/class-fkhs-reporter.php:95
 msgid "Comparison"
 msgstr "Sammenligning"
 
-#: includes/class-fkhs-reporter.php:90
+#: includes/class-fkhs-reporter.php:96
 msgid "Value"
 msgstr "Verdi"
 
-#: includes/class-fkhs-reporter.php:91
+#: includes/class-fkhs-reporter.php:97
 msgid "At least"
 msgstr "Minst"
 
-#: includes/class-fkhs-reporter.php:92
+#: includes/class-fkhs-reporter.php:98
 msgid "At most"
 msgstr "Høyst"
 
-#: includes/class-fkhs-reporter.php:93
+#: includes/class-fkhs-reporter.php:99
 msgid "Rows per page"
 msgstr "Rader per side"
 
-#: includes/class-fkhs-reporter.php:94
+#: includes/class-fkhs-reporter.php:100
 #, php-format
 msgid "Sort by %s"
 msgstr "Sorter etter %s"
 
-#: includes/class-fkhs-reporter.php:95
+#: includes/class-fkhs-reporter.php:101
 #, php-format
 msgid "Filter %s"
 msgstr "Filtrer %s"
 
-#: includes/class-fkhs-reporter.php:96
+#: includes/class-fkhs-reporter.php:102
 #, php-format
 msgid "Filter %s (active)"
 msgstr "Filtrer %s (aktivt)"
 
-#: includes/class-fkhs-reporter.php:97
+#: includes/class-fkhs-reporter.php:103
 msgid "Click to filter"
 msgstr "Velg for å filtrere"
 
-#: includes/class-fkhs-reporter.php:98
+#: includes/class-fkhs-reporter.php:104
 msgid "Filtered – click to edit"
 msgstr "Filtrert – velg for å endre"
 
-#: includes/class-fkhs-reporter.php:99
+#: includes/class-fkhs-reporter.php:105
 msgid "Filter"
 msgstr "Filter"
 
-#: includes/class-fkhs-reporter.php:100
-#: includes/class-fkhs-reporter.php:160
+#: includes/class-fkhs-reporter.php:106 includes/class-fkhs-reporter.php:151
 msgid "User"
 msgstr "Bruker"
 
-#: includes/class-fkhs-reporter.php:101
-#: includes/class-fkhs-reporter.php:161
+#: includes/class-fkhs-reporter.php:107 includes/class-fkhs-reporter.php:152
 msgid "Lesson"
 msgstr "Leksjon"
 
-#: includes/class-fkhs-reporter.php:102
+#: includes/class-fkhs-reporter.php:108
 msgid "Date range"
 msgstr "Datoperiode"
 
-#: includes/class-fkhs-reporter.php:103
+#: includes/class-fkhs-reporter.php:109
 msgid "Score (%)"
 msgstr "Resultat (%)"
 
-#: includes/class-fkhs-reporter.php:104
+#: includes/class-fkhs-reporter.php:110
 msgid "Criterion (%)"
 msgstr "Krav (%)"
 
-#: includes/class-fkhs-reporter.php:105
-#: includes/class-fkhs-reporter.php:165
+#: includes/class-fkhs-reporter.php:111 includes/class-fkhs-reporter.php:156
 msgid "Passed"
 msgstr "Bestått"
 
-#: includes/class-fkhs-reporter.php:106
-#: includes/class-fkhs-reporter.php:166
+#: includes/class-fkhs-reporter.php:112 includes/class-fkhs-reporter.php:157
 msgid "Completed"
 msgstr "Fullført"
 
-#: includes/class-fkhs-reporter.php:107
+#: includes/class-fkhs-reporter.php:113
 msgid "No filter for this column."
 msgstr "Denne kolonnen har ikke noe filter."
 
-#: includes/class-fkhs-reporter.php:108
+#: includes/class-fkhs-reporter.php:114
 msgid "Clear"
 msgstr "Nullstill"
 
-#: includes/class-fkhs-reporter.php:109
+#: includes/class-fkhs-reporter.php:115
 msgid "Apply"
 msgstr "Bruk"
 
-#: includes/class-fkhs-reporter.php:110
+#: includes/class-fkhs-reporter.php:116
 msgid "Reset filters"
 msgstr "Nullstill filtre"
 
-#: includes/class-fkhs-reporter.php:111
+#: includes/class-fkhs-reporter.php:117
 msgid "Prev"
 msgstr "Forrige"
 
-#: includes/class-fkhs-reporter.php:112
+#: includes/class-fkhs-reporter.php:118
 msgid "Next"
 msgstr "Neste"
 
-#: includes/class-fkhs-reporter.php:113
+#: includes/class-fkhs-reporter.php:119
 #, php-format
 msgid "Rows: %d"
 msgstr "Rader: %d"
 
-#: includes/class-fkhs-reporter.php:114
+#: includes/class-fkhs-reporter.php:120
 msgid "Any"
 msgstr "Alle"
 
-#: includes/class-fkhs-reporter.php:115
+#: includes/class-fkhs-reporter.php:121
 msgid "Yes"
 msgstr "Ja"
 
-#: includes/class-fkhs-reporter.php:116
+#: includes/class-fkhs-reporter.php:122
 msgid "No"
 msgstr "Nei"
 
-#: includes/class-fkhs-reporter.php:153
-msgid "H5P → Sensei (latest attempts)"
-msgstr "H5P → Sensei (siste forsøk)"
+#: includes/class-fkhs-reporter.php:144
+msgid "H5P → Sensei (attempt history)"
+msgstr "H5P → Sensei (forsøkshistorikk)"
 
-#: includes/class-fkhs-reporter.php:159
+#: includes/class-fkhs-reporter.php:150
 msgid "Date"
 msgstr "Dato"
 
-#: includes/class-fkhs-reporter.php:162
+#: includes/class-fkhs-reporter.php:153
 msgid "H5P Content"
 msgstr "H5P-innhold"
 
-#: includes/class-fkhs-reporter.php:163
+#: includes/class-fkhs-reporter.php:154
 msgid "Score"
 msgstr "Resultat"
 
-#: includes/class-fkhs-reporter.php:164
+#: includes/class-fkhs-reporter.php:155
 msgid "Criterion"
 msgstr "Krav"
 
-#: includes/class-fkhs-reporter.php:172
-msgid "No data yet."
-msgstr "Ingen data ennå."
+#: includes/class-fkhs-reporter.php:166
+msgid ""
+"Search covers all attempts you may view. Teachers see lessons in courses "
+"they own. Dates use the stored site time. Passed and completed are stored "
+"attempt flags; the criterion is the current effective threshold and cannot "
+"be globally filtered or sorted."
+msgstr "Søket omfatter alle forsøk du har tilgang til. Lærere ser leksjoner i egne kurs. Datoer bruker lagret nettstedstid. Bestått og fullført viser lagret forsøksstatus. Kriteriet viser gjeldende terskel og kan ikke brukes til global filtrering eller sortering."
 
-#: includes/class-fkhs-reporter.php:229
+#: includes/class-fkhs-reporter.php:167
+msgid "JavaScript is required to search this report."
+msgstr "JavaScript må være aktivert for å søke i rapporten."
+
+#: includes/class-fkhs-reporter.php:212
 msgid "Completion only"
 msgstr "Kun fullføring"
-
-#. translators: %d: number of rows displayed in the report.
-#: includes/class-fkhs-reporter.php:286
-#, php-format
-msgid "Showing the latest %d attempts."
-msgstr "Viser de siste %d forsøkene."
 
 #: includes/class-fkhs-rest.php:37
 msgid "Stable UUID for retries of this event."
@@ -400,3 +445,13 @@ msgstr "Du må bestå H5P-aktiviteten før leksjonen kan fullføres."
 #: includes/class-fkhs-sensei.php:337
 msgid "You must pass the H5P activity before you can take the quiz."
 msgstr "Du må bestå H5P-aktiviteten før du kan ta quizen."
+
+#~ msgid "H5P → Sensei (latest attempts)"
+#~ msgstr "H5P → Sensei (siste forsøk)"
+
+#~ msgid "No data yet."
+#~ msgstr "Ingen data ennå."
+
+#, php-format
+#~ msgid "Showing the latest %d attempts."
+#~ msgstr "Viser de siste %d forsøkene."

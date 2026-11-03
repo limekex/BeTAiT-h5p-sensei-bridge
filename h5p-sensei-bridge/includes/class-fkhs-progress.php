@@ -26,6 +26,20 @@ class FKHS_Progress {
 		global $wpdb;
 		$table = $wpdb->prefix . FKHS_TABLE;
 
+		// Resolve titles/libraries once for all activities instead of one query per item.
+		$metadata = array();
+		if ( $with_metadata ) {
+			$c_table = $wpdb->prefix . 'h5p_contents';
+			$l_table = $wpdb->prefix . 'h5p_libraries';
+			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$records = $wpdb->get_results(
+				$wpdb->prepare( "SELECT c.id, c.title, l.name, l.major_version, l.minor_version
+					FROM {$c_table} c LEFT JOIN {$l_table} l ON l.id=c.library_id
+					WHERE c.id IN ($placeholders)", $ids ), ARRAY_A
+			);
+			self::check_read();
+			foreach ( $records as $record ) { $metadata[(int)$record['id']] = $record; }
+		}
 		$out = array();
 
 		foreach ( $ids as $cid ) {
@@ -68,24 +82,10 @@ class FKHS_Progress {
 
 			// Metadata (tittel/type)
 			$h5p_title = ''; $h5p_type = '';
-			if ( $with_metadata ) {
-				$c_table = $wpdb->prefix . 'h5p_contents';
-				$l_table = $wpdb->prefix . 'h5p_libraries';
-				$meta = $wpdb->get_row(
-					$wpdb->prepare(
-						"SELECT c.title, l.name, l.major_version, l.minor_version
-						FROM {$c_table} c
-						LEFT JOIN {$l_table} l ON l.id = c.library_id
-						WHERE c.id = %d",
-						$cid
-					),
-					ARRAY_A
-				);
-				self::check_read();
-				if ( $meta ) {
-					$h5p_title = (string) ( $meta['title'] ?? '' );
-					$h5p_type  = $meta['name'] ? sprintf( '%s %d.%d', $meta['name'], (int) $meta['major_version'], (int) $meta['minor_version'] ) : '';
-				}
+			$meta = $metadata[$cid] ?? null;
+			if ( $meta ) {
+				$h5p_title = (string) ( $meta['title'] ?? '' );
+				$h5p_type = $meta['name'] ? sprintf( '%s %d.%d', $meta['name'], (int)$meta['major_version'], (int)$meta['minor_version'] ) : '';
 			}
 
 			$eff_threshold = FKHS_Thresholds::get_effective_threshold( (int) $lesson_id, (int) $cid, (int) $user_id );

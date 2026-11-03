@@ -42,6 +42,7 @@ require_once FKHS_DIR . 'includes/class-fkhs-helpers.php';
 require_once FKHS_DIR . 'includes/class-fkhs-progress.php';
 require_once FKHS_DIR . 'includes/class-fkhs-rest.php';
 require_once FKHS_DIR . 'includes/class-fkhs-sensei.php';
+require_once FKHS_DIR . 'includes/class-fkhs-report-query.php';
 require_once FKHS_DIR . 'includes/class-fkhs-reporter.php';
 require_once FKHS_DIR . 'includes/class-fkhs-metabox.php';
 

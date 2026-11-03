@@ -64,3 +64,8 @@ for storage in comments dual-comments dual-tables; do
   wp eval-file /tests/integration/configure-progress.php "$storage"
   wp eval-file /tests/wordpress-completion.php "$storage"
 done
+wp eval-file /tests/wordpress-report.php
+# One representative profile records the bounded synthetic performance matrix.
+if [ "$profile" = wp71-php82 ]; then
+  wp eval-file /tests/wordpress-report-benchmark.php | tee "$artifacts/report-benchmark.log"
+fi

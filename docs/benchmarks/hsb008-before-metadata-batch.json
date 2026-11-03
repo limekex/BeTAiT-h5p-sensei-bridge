@@ -1,0 +1,238 @@
+{
+  "description": "HSB-008 server report with pre-existing per-activity progress metadata reads; local MariaDB 10.11.18, PHP 8.2.32, WordPress 7.1.4. Cold WP object cache, warm database, 15 samples. Synthetic attempts in addition to other integration fixtures. Candidate indexes only in disposable DB.",
+  "measurements": [
+    {
+      "attempts": 1000,
+      "activities": 1,
+      "admin": {
+        "p50_ms": 5.98,
+        "p95_ms": 9.87,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 7.22,
+        "p95_ms": 8.7,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 2.29,
+        "p95_ms": 2.95,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 1000,
+      "activities": 10,
+      "admin": {
+        "p50_ms": 8.25,
+        "p95_ms": 16.34,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 7.97,
+        "p95_ms": 12.2,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 9.61,
+        "p95_ms": 10.43,
+        "queries_min": 42,
+        "queries_max": 42,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 1000,
+      "activities": 50,
+      "admin": {
+        "p50_ms": 5.12,
+        "p95_ms": 5.45,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 7.72,
+        "p95_ms": 11.28,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 26.54,
+        "p95_ms": 31.69,
+        "queries_min": 202,
+        "queries_max": 202,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 10000,
+      "activities": 1,
+      "admin": {
+        "p50_ms": 12.03,
+        "p95_ms": 116.26,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 28.78,
+        "p95_ms": 39.25,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 11.64,
+        "p95_ms": 14.29,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 10000,
+      "activities": 10,
+      "admin": {
+        "p50_ms": 7.87,
+        "p95_ms": 8.14,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 21.62,
+        "p95_ms": 25.7,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 26.13,
+        "p95_ms": 31.18,
+        "queries_min": 42,
+        "queries_max": 42,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 10000,
+      "activities": 50,
+      "admin": {
+        "p50_ms": 7.81,
+        "p95_ms": 7.95,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 22.1,
+        "p95_ms": 26.33,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 50.53,
+        "p95_ms": 251.41,
+        "queries_min": 202,
+        "queries_max": 202,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 100000,
+      "activities": 1,
+      "admin": {
+        "p50_ms": 15.47,
+        "p95_ms": 16.8,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 138.82,
+        "p95_ms": 143.74,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 105.75,
+        "p95_ms": 144.64,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 100000,
+      "activities": 10,
+      "admin": {
+        "p50_ms": 15.55,
+        "p95_ms": 16.57,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 140.6,
+        "p95_ms": 271.1,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 118.95,
+        "p95_ms": 242.82,
+        "queries_min": 42,
+        "queries_max": 42,
+        "samples": 15
+      }
+    },
+    {
+      "attempts": 100000,
+      "activities": 50,
+      "admin": {
+        "p50_ms": 15.63,
+        "p95_ms": 16.65,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "teacher": {
+        "p50_ms": 139.8,
+        "p95_ms": 163.67,
+        "queries_min": 6,
+        "queries_max": 6,
+        "samples": 15
+      },
+      "progress": {
+        "p50_ms": 145.28,
+        "p95_ms": 170.51,
+        "queries_min": 202,
+        "queries_max": 202,
+        "samples": 15
+      }
+    }
+  ],
+  "index_evidence": [
+    "EXPLAIN report [{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"a\",\"type\":\"index\",\"possible_keys\":null,\"key\":\"created_at\",\"key_len\":\"5\",\"ref\":null,\"rows\":\"68\",\"Extra\":\"\"},{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"u\",\"type\":\"eq_ref\",\"possible_keys\":\"PRIMARY\",\"key\":\"PRIMARY\",\"key_len\":\"8\",\"ref\":\"wordpress.a.user_id\",\"rows\":\"1\",\"Extra\":\"\"},{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"p\",\"type\":\"eq_ref\",\"possible_keys\":\"PRIMARY,type_status_date,type_status_author\",\"key\":\"PRIMARY\",\"key_len\":\"8\",\"ref\":\"wordpress.a.lesson_id\",\"rows\":\"1\",\"Extra\":\"Using where\"},{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"<subquery2>\",\"type\":\"eq_ref\",\"possible_keys\":\"distinct_key\",\"key\":\"distinct_key\",\"key_len\":\"8\",\"ref\":\"func\",\"rows\":\"1\",\"Extra\":\"\"},{\"id\":\"2\",\"select_type\":\"MATERIALIZED\",\"table\":\"c\",\"type\":\"range\",\"possible_keys\":\"PRIMARY,type_status_date,post_author,type_status_author\",\"key\":\"type_status_author\",\"key_len\":\"164\",\"ref\":null,\"rows\":\"12\",\"Extra\":\"Using where; Using index\"},{\"id\":\"2\",\"select_type\":\"MATERIALIZED\",\"table\":\"pm\",\"type\":\"ref\",\"possible_keys\":\"post_id,meta_key\",\"key\":\"meta_key\",\"key_len\":\"767\",\"ref\":\"const\",\"rows\":\"19\",\"Extra\":\"Using where\"}]",
+    "EXPLAIN latest [{\"id\":\"1\",\"select_type\":\"SIMPLE\",\"table\":\"wp_fkhs_attempts\",\"type\":\"index\",\"possible_keys\":\"event_identity,user_lesson\",\"key\":\"created_at\",\"key_len\":\"5\",\"ref\":null,\"rows\":\"50\",\"Extra\":\"Using where\"}]",
+    "CANDIDATE lesson_created {\"p50_ms\":255.52,\"p95_ms\":284.67,\"queries_min\":6,\"queries_max\":6,\"samples\":15}",
+    "EXPLAIN candidate-report [{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"p\",\"type\":\"ref\",\"possible_keys\":\"PRIMARY,type_status_date,type_status_author\",\"key\":\"type_status_author\",\"key_len\":\"82\",\"ref\":\"const\",\"rows\":\"23\",\"Extra\":\"Using index condition; Using temporary; Using filesort\"},{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"a\",\"type\":\"ref\",\"possible_keys\":\"lesson_created\",\"key\":\"lesson_created\",\"key_len\":\"8\",\"ref\":\"wordpress.p.ID\",\"rows\":\"4181\",\"Extra\":\"\"},{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"u\",\"type\":\"eq_ref\",\"possible_keys\":\"PRIMARY\",\"key\":\"PRIMARY\",\"key_len\":\"8\",\"ref\":\"wordpress.a.user_id\",\"rows\":\"1\",\"Extra\":\"\"},{\"id\":\"1\",\"select_type\":\"PRIMARY\",\"table\":\"<subquery2>\",\"type\":\"eq_ref\",\"possible_keys\":\"distinct_key\",\"key\":\"distinct_key\",\"key_len\":\"8\",\"ref\":\"func\",\"rows\":\"1\",\"Extra\":\"\"},{\"id\":\"2\",\"select_type\":\"MATERIALIZED\",\"table\":\"c\",\"type\":\"range\",\"possible_keys\":\"PRIMARY,type_status_date,post_author,type_status_author\",\"key\":\"type_status_author\",\"key_len\":\"164\",\"ref\":null,\"rows\":\"12\",\"Extra\":\"Using where; Using index\"},{\"id\":\"2\",\"select_type\":\"MATERIALIZED\",\"table\":\"pm\",\"type\":\"ref\",\"possible_keys\":\"post_id,meta_key\",\"key\":\"meta_key\",\"key_len\":\"767\",\"ref\":\"const\",\"rows\":\"19\",\"Extra\":\"Using where\"}]",
+    "CANDIDATE progress_latest {\"p50_ms\":132.58,\"p95_ms\":188.7,\"queries_min\":202,\"queries_max\":202,\"samples\":15}",
+    "EXPLAIN candidate-latest [{\"id\":\"1\",\"select_type\":\"SIMPLE\",\"table\":\"wp_fkhs_attempts\",\"type\":\"ref\",\"possible_keys\":\"event_identity,user_lesson,lesson_created,progress_latest\",\"key\":\"progress_latest\",\"key_len\":\"25\",\"ref\":\"const,const,const\",\"rows\":\"2000\",\"Extra\":\"Using where\"}]"
+  ]
+}

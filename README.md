@@ -22,8 +22,8 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
   - Locks quiz/lesson CTAs until passed.
   - Shows status panel (tasks remaining, clickable links to scroll).
 - Admin report (`admin.php?page=fkhs-report`):
-  - Sortable, filterable table of attempts.
-  - Pagination, per-column filtering.
+  - Server-side search, sorting and pagination across the full attempt history.
+  - Administrators see all attempts; teachers see attempts in their own courses.
 - i18n support: PHP + JS strings translatable.
 
 ---
@@ -73,9 +73,13 @@ Native lesson completion requests are checked before Sensei writes progress. The
 - JS: `assets/js/h5p-sensei-admin-report.js`
 - Loaded only on `admin.php?page=fkhs-report`.
 - Supports:
-  - Dynamic sorting, filters (user, lesson, date, score, criterion, passed, completed).
-  - Pagination (10/25/50/100/200).
+  - Server-side sorting and filters (user, lesson, stored date, score percentage, stored passed/completed flags).
+  - Pagination (10/25/50/100/200), including records older than the former 200-row cap.
+  - Current effective criterion displayed per learner/activity; global criterion sorting/filtering is unavailable because runtime filters may change it.
+  - Visible load failures and retry, bounded requests, stale-response rejection and keyboard focus preservation.
   - Minimal CSS injected from JS.
+
+The report uses `GET /wp-json/fkhs/v1/report` with cookie authentication and a REST nonce. Teacher access requires Sensei grading/edit-course capabilities and current ownership of the lesson’s course; counts and rows share the same scope. No raw xAPI statements are selected or returned. The old `fkhs_report_limit` filter no longer caps history. See [HSB-008 validation, API parameters and measurements](docs/HSB_008_VALIDATION.md).
 
 ---
 

@@ -98,6 +98,13 @@ class FakeDB {
     private function matches( $args ) {
         return array_values(array_filter($this->rows, fn($r) => $r['user_id'] === $args[0] && $r['lesson_id'] === $args[1] && $r['content_id'] === $args[2]));
     }
+    public function get_results( $query, $format ) {
+        ++$this->reads;
+        [$sql, $args] = $query;
+        check(str_contains($sql, 'h5p_contents') && str_contains($sql, 'IN ('), 'Metadata query is batched');
+        $this->last_error = '';
+        return array_map(fn($id) => array('id'=>$id,'title'=>'Activity','name'=>'H5P.Test','major_version'=>1,'minor_version'=>0), $args[0]);
+    }
     public function get_row( $query, $format ) {
         ++$this->reads;
         [$sql, $args] = $query;

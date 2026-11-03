@@ -1,9 +1,8 @@
 <?php
 /**
- * Admin Reporter: Lists recent H5P → Sensei attempts.
+ * Admin report shell and escaped rows for the authorized history endpoint.
  *
- * Shows the last N attempts (default 200) with user, lesson, H5P content,
- * score, criterion, and pass/completion flags. Useful for QA and auditing.
+ * All filtering and pagination are performed by FKHS_Report_Query.
  *
  * @package H5P_Sensei_Bridge
  */
@@ -23,6 +22,7 @@ class FKHS_Reporter {
 	 * @return void
 	 */
 	public static function init() {
+		add_action( 'rest_api_init', array( 'FKHS_Report_Query', 'register' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin' ) );
 
@@ -34,10 +34,11 @@ class FKHS_Reporter {
 	 * @return void
 	 */
 	public static function menu() {
+		if ( ! FKHS_Report_Query::can_view() ) { return; }
 		add_menu_page(
 			__( 'H5P → Sensei', 'h5p-sensei-bridge' ), // Page title.
 			__( 'H5P → Sensei', 'h5p-sensei-bridge' ), // Menu title.
-			'manage_options',                           // Capability.
+			'read',                                     // Checked above and on every read.
 			'fkhs-report',                               // Menu slug.
 			array( __CLASS__, 'render' ),               // Callback.
 			'dashicons-yes',                             // Icon.
@@ -81,7 +82,12 @@ class FKHS_Reporter {
 
 			// 3) Lokaliser (fallback-tekster dersom wp.i18n ikke er tilgjengelig i runtime)
 			wp_localize_script( 'fkhs-admin-report', 'fkhsAdmin', array(
+				'url' => rest_url( 'fkhs/v1/report' ),
+				'nonce' => wp_create_nonce( 'wp_rest' ),
 				'i18n' => array(
+					'loading' => __( 'Loading attempts…', 'h5p-sensei-bridge' ),
+					'loadError' => __( 'Could not load attempts. Retry, or sign in again if your session expired.', 'h5p-sensei-bridge' ),
+					'retry' => __( 'Retry', 'h5p-sensei-bridge' ),
 					'sort'               => __( 'Sort', 'h5p-sensei-bridge' ),
 					'close' => __( 'Close', 'h5p-sensei-bridge' ),
 					'from' => __( 'From', 'h5p-sensei-bridge' ),
@@ -129,28 +135,13 @@ class FKHS_Reporter {
 	 * @return void
 	 */
 		public static function render() {
-			if ( ! current_user_can( 'manage_options' ) ) {
+			if ( ! FKHS_Report_Query::can_view() ) {
 				return;
 			}
 
-			global $wpdb;
-			$table = $wpdb->prefix . FKHS_TABLE;
-
-			/**
-			 * Filter the number of rows to show in the report.
-			 *
-			 * @param int $limit Default 200.
-			 */
-			$limit = (int) apply_filters( 'fkhs_report_limit', 200 );
-			if ( $limit < 1 ) {
-				$limit = 200;
-			}
-
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $limit is cast int above.
-			$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT {$limit}", ARRAY_A );
 			?>
 			<div class="wrap">
-				<h1 id="fkhs-report-title"><?php esc_html_e( 'H5P → Sensei (latest attempts)', 'h5p-sensei-bridge' ); ?></h1>
+				<h1 id="fkhs-report-title"><?php esc_html_e( 'H5P → Sensei (attempt history)', 'h5p-sensei-bridge' ); ?></h1>
 
 				<div class="fkhs-report-scroll" role="region" aria-labelledby="fkhs-report-title" tabindex="0">
 				<table id="fkhs-report-table" class="widefat striped">
@@ -167,21 +158,30 @@ class FKHS_Reporter {
 						</tr>
 					</thead>
 					<tbody>
-					<?php if ( empty( $rows ) ) : ?>
-						<tr>
-							<td colspan="8"><?php esc_html_e( 'No data yet.', 'h5p-sensei-bridge' ); ?></td>
-						</tr>
-					<?php
-					else :
+
+					</tbody>
+				</table>
+				</div>
+
+                <p class="description"><?php esc_html_e( 'Search covers all attempts you may view. Teachers see lessons in courses they own. Dates use the stored site time. Passed and completed are stored attempt flags; the criterion is the current effective threshold and cannot be globally filtered or sorted.', 'h5p-sensei-bridge' ); ?></p>
+                <noscript><p><?php esc_html_e( 'JavaScript is required to search this report.', 'h5p-sensei-bridge' ); ?></p></noscript>
+			</div>
+			<?php
+		}
+
+    /** Render only the bounded, authorized page; no raw xAPI data is exposed. */
+    public static function render_rows( array $rows, array $metadata ): string {
+        ob_start();
+        try {
 						foreach ( $rows as $r ) :
 							$user_id     = (int) $r['user_id'];
-							$user        = get_user_by( 'id', $user_id );
+							$user_login  = $r['user_login'] ?: ( '#' . $user_id );
 							$lesson_id   = (int) $r['lesson_id'];
 							$lesson_link = get_edit_post_link( $lesson_id );
 
 							// Lesson title: prefer stored snapshot; fall back to current live title.
 							$stored_title = isset( $r['lesson_title'] ) ? trim( (string) $r['lesson_title'] ) : '';
-							$live_title   = get_the_title( $lesson_id );
+							$live_title   = $r['live_title'];
 							$lesson_title = $stored_title ?: ( $live_title ?: '—' );
 
 							// H5P metadata lookup (safe on multisite/prefix).
@@ -190,30 +190,14 @@ class FKHS_Reporter {
 							$h5p_type   = '—';
 							$h5p_link   = '';
 
-							if ( $content_id ) {
-								$c_table = $wpdb->prefix . 'h5p_contents';
-								$l_table = $wpdb->prefix . 'h5p_libraries';
-
-								$h5p = $wpdb->get_row(
-									$wpdb->prepare(
-										"SELECT c.id, c.title, l.name, l.major_version, l.minor_version
-										FROM {$c_table} c
-										LEFT JOIN {$l_table} l ON l.id = c.library_id
-										WHERE c.id = %d",
-										$content_id
-									),
-									ARRAY_A
-								);
-
-								if ( $h5p ) {
-									$lib_name   = isset( $h5p['name'] ) ? (string) $h5p['name'] : '';
-									$lib_major  = isset( $h5p['major_version'] ) ? (int) $h5p['major_version'] : 0;
-									$lib_minor  = isset( $h5p['minor_version'] ) ? (int) $h5p['minor_version'] : 0;
-									$h5p_type   = $lib_name ? sprintf( '%s %d.%d', $lib_name, $lib_major, $lib_minor ) : '—';
-									$h5p_title  = ! empty( $h5p['title'] ) ? (string) $h5p['title'] : '—';
-									$h5p_link   = admin_url( 'admin.php?page=h5p&task=edit&id=' . $content_id );
-								}
-							}
+							$h5p = $metadata[ $content_id ] ?? null;
+                            if ( $h5p ) {
+                                $h5p_title = $h5p['title'];
+                                $h5p_type = $h5p['name'] ? sprintf( '%s %d.%d', $h5p['name'], $h5p['major_version'], $h5p['minor_version'] ) : '—';
+                                if ( current_user_can( 'manage_options' ) || ( (int) $h5p['user_id'] === get_current_user_id() && current_user_can( 'edit_h5p_contents' ) ) ) {
+                                    $h5p_link = admin_url( 'admin.php?page=h5p&task=edit&id=' . $content_id );
+                                }
+                            }
 
 							// Use the same "effective threshold" logic as the frontend/REST.
 							$eff_threshold = FKHS_Thresholds::get_effective_threshold(
@@ -232,8 +216,9 @@ class FKHS_Reporter {
 							$max = is_null( $r['max_score'] ) ? '—' : (float) $r['max_score'];
 							?>
 							<tr
-								data-date-iso="<?php echo esc_attr( gmdate( 'Y-m-d\TH:i:s', strtotime( $r['created_at'] ) ) ); ?>"
-								data-user="<?php echo esc_attr( $user ? $user->user_login : ( '#' . (int) $r['user_id'] ) ); ?>"
+								data-attempt-id="<?php echo (int) $r['id']; ?>"
+                                data-date-iso="<?php echo esc_attr( gmdate( 'Y-m-d\TH:i:s', strtotime( $r['created_at'] ) ) ); ?>"
+								data-user="<?php echo esc_attr( $user_login ); ?>"
 								data-lesson-title="<?php echo esc_attr( $lesson_title ); ?>"
 								data-score-raw="<?php echo esc_attr( is_null( $r['raw_score'] ) ? '' : (float) $r['raw_score'] ); ?>"
 								data-score-max="<?php echo esc_attr( is_null( $r['max_score'] ) ? '' : (float) $r['max_score'] ); ?>"
@@ -242,7 +227,7 @@ class FKHS_Reporter {
 								data-completed="<?php echo esc_attr( ! empty( $r['completed'] ) ? '1' : '0' ); ?>"
 							>
 								<td><?php echo esc_html( $r['created_at'] ); ?></td>
-								<td><?php echo $user ? esc_html( $user->user_login ) : esc_html( '#' . $user_id ); ?></td>
+								<td><?php echo esc_html( $user_login ); ?></td>
 								<td>
 									<?php if ( $lesson_link ) : ?>
 										<a href="<?php echo esc_url( $lesson_link ); ?>">
@@ -263,7 +248,7 @@ class FKHS_Reporter {
 											esc_html( $h5p_type )
 										);
 									} else {
-										echo '—';
+										echo esc_html( $h5p ? $h5p_title . ' (' . $h5p_type . ')' : '#' . $content_id );
 									}
 									?>
 								</td>
@@ -274,20 +259,10 @@ class FKHS_Reporter {
 							</tr>
 							<?php
 						endforeach;
-					endif;
-					?>
-					</tbody>
-				</table>
-				</div>
-
-				<p class="description">
-					<?php
-					/* translators: %d: number of rows displayed in the report. */
-					printf( esc_html__( 'Showing the latest %d attempts.', 'h5p-sensei-bridge' ), (int) $limit );
-					?>
-				</p>
-			</div>
-			<?php
-		}
+            return (string) ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+    }
 
 }
