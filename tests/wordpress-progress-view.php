@@ -25,15 +25,22 @@ $template='<!-- wp:group --><div class="wp-block-group">'.$markup.'</div><!-- /w
 $check(substr_count(do_blocks($template),'data-fkhs-progress')===1 && strpos(do_blocks($template),'[fkhs_progress]')===false,'Template renders directly without shortcode processing or duplication');
 $check(strpos(do_blocks('<!-- wp:fkhs/progress {"align":"wide","style":{"spacing":{"padding":{"top":"24px"}}}} /-->'),'padding-top:24px')!==false,'Dynamic template block honors layout spacing');
 $empty=wp_insert_post(array('post_type'=>'lesson','post_status'=>'publish','post_title'=>'No H5P','post_content'=>$markup));
+$check(FKHS_Sensei::user_has_passed_h5p($students[0],$empty),'Empty lesson introduces no server-side H5P completion requirement');
 $GLOBALS['post']=get_post($empty);
 $check(do_blocks($markup)==='','Foreign Query Loop context cannot show current lesson progress');
 $GLOBALS['wp_query']=new WP_Query(array('post_type'=>'lesson','p'=>$empty));
+$scripts_before=$GLOBALS['wp_scripts'];$styles_before=$GLOBALS['wp_styles'];
+$GLOBALS['wp_scripts']=new WP_Scripts();$GLOBALS['wp_styles']=new WP_Styles();
+FKHS_Plugin::enqueue_front();FKHS_Progress_View::enqueue();
+$check(!wp_script_is('fkhs-h5p-bridge','enqueued') && !wp_style_is('fkhs-progress','enqueued'),'Empty lesson loads no bridge or progress assets and cannot inject footer status');
+$GLOBALS['wp_scripts']=$scripts_before;$GLOBALS['wp_styles']=$styles_before;
 $check(strpos(do_blocks($template),'data-fkhs-progress')===false && do_blocks($markup)==='' && do_shortcode('[fkhs_progress]')==='','No H5P produces no progress markup or placeholder');
 $GLOBALS['wp_query']=new WP_Query(array('post_type'=>'lesson','p'=>$lesson));$GLOBALS['post']=get_post($lesson);
 $rendered=array();foreach(array(0,$students[0],$students[1]) as $viewer){wp_set_current_user($viewer);$rendered[]=do_shortcode(do_blocks($markup));}
 $check(count(array_unique($rendered))===1 && strpos($rendered[0],'data-fkhs-progress')!==false,'Anonymous and learner HTML identical; no cached results/identity');
 $check(strpos($rendered[0],'noscript')!==false,'No-JavaScript explanation');
 FKHS_Progress_View::enqueue();$check(wp_style_is('fkhs-progress','enqueued'),'Lesson progress stylesheet enqueued');
+FKHS_Plugin::enqueue_front();$check(wp_script_is('fkhs-h5p-bridge','enqueued'),'Lesson with H5P retains tracking and progress updates');
 $GLOBALS['wp_query']=new WP_Query(array('post_type'=>'page','p'=>-1));
 $check(do_shortcode('[fkhs_progress]')==='' && do_blocks($markup)==='','Outside lesson emits no progress markup');
 $GLOBALS['wp_query']=$query_before;$GLOBALS['post']=$post_before;

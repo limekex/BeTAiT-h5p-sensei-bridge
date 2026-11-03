@@ -83,7 +83,7 @@ class FKHS_Plugin {
 	/**
 	 * Front-end bridge script enqueue.
 	 *
-	 * Loads only on single Sensei lesson pages for logged-in users.
+	 * Loads only on single Sensei lessons with H5P activities for logged-in users.
 	 * Provides REST route, nonce, current lesson ID, pass threshold and requirement.
 	 *
 	 * @return void
@@ -110,7 +110,7 @@ class FKHS_Plugin {
 			return;
 		}
 
-		$lesson_id = get_the_ID();
+		$lesson_id = (int) get_queried_object_id();
 
 		// Resolve per-lesson settings with sane defaults.
 		$threshold = (float) get_post_meta( $lesson_id, '_fkhs_pass_threshold', true );
@@ -119,6 +119,10 @@ class FKHS_Plugin {
 		}
 		// Start conservatively until authenticated status supplies the gate state.
 		$require = ! empty( FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id ) );
+		// Nothing to track or gate: avoid injecting the legacy footer/loading panel.
+		if ( ! $require ) {
+			return;
+		}
 
 		// Packaged ZIPs normalize timestamps; content must drive cache invalidation.
 		$script_rel_path = 'assets/js/h5p-sensei-bridge.js';

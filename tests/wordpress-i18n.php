@@ -4,7 +4,7 @@ if (!defined('FKHS_INTEGRATION_TESTS') || true !== FKHS_INTEGRATION_TESTS || !de
     throw new RuntimeException('Disposable integration environment required.');
 }
 wp_set_current_user(1);
-$lesson = wp_insert_post(array('post_type'=>'lesson','post_status'=>'publish','post_title'=>'Locale fixture'));
+$lesson = wp_insert_post(array('post_type'=>'lesson','post_status'=>'publish','post_title'=>'Locale fixture','post_content'=>'[h5p id="1"]'));
 global $wp_query, $post, $wp_scripts;
 $wp_query = new WP_Query(array('post_type'=>'lesson','p'=>$lesson));
 $post = get_post($lesson);
