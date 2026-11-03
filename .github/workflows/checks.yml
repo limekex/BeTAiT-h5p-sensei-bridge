@@ -31,7 +31,9 @@ jobs:
           node --check h5p-sensei-bridge/assets/js/h5p-sensei-bridge.js
           node --check h5p-sensei-bridge/assets/js/h5p-sensei-admin-report.js
       - name: JavaScript regressions
-        run: node --test tests/*.test.cjs
+        run: |
+          npm ci --ignore-scripts
+          npm test
   integration:
     name: Integration ${{ matrix.profile }}
     runs-on: ubuntu-24.04

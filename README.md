@@ -18,7 +18,7 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
   - `POST /wp-json/fkhs/v1/h5p-xapi`
   - `GET  /wp-json/fkhs/v1/h5p-status?lesson_id=123`
 - Frontend script (`assets/js/h5p-sensei-bridge.js`):
-  - Adds overlay + badge on H5P containers (pass/fail state).
+  - Adds status badges and inline result feedback below H5P activities.
   - Locks quiz/lesson CTAs until passed.
   - Shows status panel (tasks remaining, clickable links to scroll).
 - Admin report (`admin.php?page=fkhs-report`):
@@ -44,6 +44,8 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 4. Ensure your H5P and Sensei plugins are active.
 
 ---
+
+For development checks, run `npm ci --ignore-scripts`, `npm test` and `bash tests/php-checks.sh`. jsdom is used only in tests; the plugin needs no Node runtime or build. Bokmål translations and keyboard/mobile coverage are documented in [HSB-007](docs/HSB_007_VALIDATION.md).
 
 ## Frontend Flow
 

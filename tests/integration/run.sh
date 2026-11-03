@@ -48,6 +48,7 @@ wp plugin activate h5p-sensei-bridge
 wp rewrite flush
 docker image inspect "$FKHS_WP_IMAGE" "$FKHS_CLI_IMAGE" mariadb:10.11.18 --format '{{.Id}} {{json .RepoDigests}}' > "$artifacts/images.txt"
 wp eval-file /tests/integration/runtime.php "$wp_version" "$php_version" | tee "$artifacts/runtime.log"
+wp eval-file /tests/wordpress-i18n.php
 wp eval-file /tests/wordpress-rest.php
 wp eval-file /tests/wordpress-durability.php
 wp eval-file /tests/wordpress-concurrent.php &

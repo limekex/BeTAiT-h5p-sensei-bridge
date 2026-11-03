@@ -1,6 +1,6 @@
 # HSB-006 — CI and compatibility
 
-Updated 2026-11-03. This records local verification of the uncommitted candidate based on `3417d3b99f9285f2515564aa83828e3a2138b636`. It does not claim that GitHub has tested these changes or that all versions between the sampled combinations are supported.
+Updated 2026-11-03. The local candidate was subsequently committed as `2479a26`; its seven GitHub jobs now pass. The matrix does not imply that all versions between the sampled combinations are supported.
 
 ## CI changes
 
@@ -35,13 +35,14 @@ The Apache image provides PHP and extensions. Before installation, the runner re
 
 The first PHP 8.0 run exposed a test-harness compatibility bug: invoking a private method through reflection needs `setAccessible(true)` before PHP 8.1. The harness now calls it only on PHP 8.0, avoiding the deprecated call on PHP 8.5. The corrected 8.0 and 8.5 runs pass without changing plugin behavior.
 
-Node 22: **17 tests passed**. JavaScript/shell syntax, `git diff --check` and actionlint 1.7.7 validation of the workflow passed. Local Docker execution uses the host architecture; GitHub's Ubuntu jobs still need to run independently.
+Node 22: **17 tests passed**. JavaScript/shell syntax, `git diff --check` and actionlint 1.7.7 validation of the workflow passed. Local Docker execution uses the host architecture; GitHub's Ubuntu jobs subsequently passed on `2479a26`.
 
 ## Reproduce
 
 ```sh
 bash tests/php-checks.sh
-node --test tests/*.test.cjs
+npm ci --ignore-scripts
+npm test
 bash tests/integration/run.sh wp69-php82
 bash tests/integration/run.sh wp71-php82
 bash tests/integration/run.sh wp71-php84
@@ -51,7 +52,7 @@ Running without a profile keeps the prior WordPress 7.1.4/PHP 8.2 default. Unkno
 
 ## GitHub status and remaining limits
 
-Read-only inspection on 2026-11-03 found that the latest published [main workflow run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41360546477) failed before any test steps. Its annotation says: “The job was not started because your account is locked due to a billing issue.” This confirms the previously observed infrastructure block. The new candidate is local and has not been committed or pushed, so no remote run can verify it yet. After the account restriction is resolved, publish the candidate through the normal review flow and require its own matrix results; rerunning an old SHA does not verify this work.
+Updated 2026-11-03 after the owner resolved billing: the [HSB-006 GitHub run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41545955184) on `2479a260b6f220d12c4340512ab88a7a33ddc348` passed all seven jobs (four PHP regressions and three full integration profiles), including actual test steps and artifact upload. The formerly blocked [main rerun](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41360546477) on `3417d3b99f9285f2515564aa83828e3a2138b636` was rerun and passed. These results apply to those revisions; newer changes require their own checks. The historical billing failure is resolved, while the broader staging/release limits remain.
 
 The plugin header still declares WordPress 6.0/PHP 8.0, and older documentation claimed Sensei 4.0+. Full integration at those historical minima is **not verified**. In particular, the current Sensei package cannot establish WordPress 6.0 support, and the repository-based progress fallback depends on newer Sensei APIs. Header/release support claims must be reconciled in HSB-010 or backed by additional fixtures before release. No plugin version or minimum metadata is changed here.
 

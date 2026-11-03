@@ -29,30 +29,34 @@
     .fkhs-status-sub{color:#475569; margin:0 0 .5rem 0}
     .fkhs-status-list{margin:0; padding-left:1rem}
     .fkhs-status-list li{margin:.15rem 0}
-    .fkhs-status-link{cursor:pointer; text-decoration:underline}
+    .fkhs-status-link{cursor:pointer; text-decoration:underline; font:inherit; color:#175985; background:transparent; border:0; padding:.35rem .15rem; text-align:start; white-space:normal; overflow-wrap:anywhere}
+    .fkhs-feedback button:focus-visible,.fkhs-h5p-wrap button:focus-visible{outline:3px solid #175985; outline-offset:3px}
+    .fkhs-feedback,.fkhs-status-panel{box-sizing:border-box; min-width:0; overflow-wrap:anywhere}
+    .fkhs-status-panel button,.fkhs-status-panel a{margin-inline:.35rem}
     .fkhs-feedback{ width:100%; margin-block:.75rem; }
     .fkhs-status-optional{ color:#64748b; font-style:italic; margin-top:.5rem }
   `);
 
   injectStyle('fkhs-bridge-overlay-css', `
     .fkhs-h5p-wrap{ position:relative; }
-    .fkhs-h5p-overlay{ position:absolute; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.88); backdrop-filter:saturate(1.2) blur(2px); border-radius:8px; text-align:center; padding:1rem; }
-    .fkhs-h5p-overlay .inner{ max-width:720px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:1rem 1.25rem; box-shadow:0 12px 28px rgba(0,0,0,.12); }
+    .fkhs-h5p-overlay{ position:relative; display:flex; align-items:center; justify-content:center; background:#f8fafc; margin-block:.5rem; box-sizing:border-box; border-radius:8px; text-align:center; padding:1rem; }
+    .fkhs-h5p-overlay .inner{ max-width:100%; box-sizing:border-box; overflow-wrap:anywhere; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:1rem 1.25rem; box-shadow:0 12px 28px rgba(0,0,0,.12); }
     .fkhs-h5p-overlay.pass .inner{ border-color:#c6f6d5; }
     .fkhs-h5p-overlay.fail .inner{ border-color:#fed7d7; }
     .fkhs-row{ display:flex; gap:.75rem; justify-content:center; margin-top:.75rem; flex-wrap:wrap; }
     .fkhs-btn-sm{ background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:.45rem .7rem; cursor:pointer; }
-    .fkhs-btn-sm.primary{ background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
-    .fkhs-close{ position:absolute; top:.5rem; right:.5rem; background:transparent; border:0; cursor:pointer; font-size:1rem; line-height:1; }
-    .fkhs-h5p-badge{ position:absolute; top:.5rem; right:.5rem; z-index:10; display:inline-block; border-radius:999px; padding:.25rem .6rem; font-size:.85rem; line-height:1; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.15); user-select:none }
+    .fkhs-btn-sm.primary{ background:#075985; color:#fff; border-color:#075985; }
+    .fkhs-close{ min-width:44px; min-height:44px; background:transparent; border:0; cursor:pointer; font-size:1rem; line-height:1; }
+    .fkhs-h5p-badge{ position:relative; display:block; max-width:100%; box-sizing:border-box; white-space:normal; overflow-wrap:anywhere; text-align:start; border:0; margin-block:.5rem; border-radius:999px; padding:.25rem .6rem; font-size:.85rem; line-height:1; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.15); user-select:none }
     .fkhs-h5p-badge.pass{ background:#1e7f34; }
     .fkhs-h5p-badge.fail{ background:#b02a37; cursor:pointer; }
   `);
 
   injectStyle('fkhs-bridge-notice-css', `
-    .fkhs-quiz-warning{ margin-top:.5rem; background:#0b5; color:#fff; border-radius:8px; padding:.5rem .75rem; font-size:.925rem; line-height:1.35; box-shadow:0 6px 18px rgba(0,0,0,.08) }
-    .fkhs-quiz-warning.fkhs-warn{ background:#d9480f }
+    .fkhs-quiz-warning{ margin-top:.5rem; background:#176534; color:#fff; border-radius:8px; padding:.5rem .75rem; font-size:.925rem; line-height:1.35; box-shadow:0 6px 18px rgba(0,0,0,.08) }
+    .fkhs-quiz-warning.fkhs-warn{ background:#9a3412 }
     .fkhs-quiz-warning.fkhs-bump{ animation:fkhs-bump .25s ease }
+    @media (prefers-reduced-motion:reduce){.fkhs-quiz-warning.fkhs-bump{animation:none}}
     @keyframes fkhs-bump{ 0%{transform:translateY(-2px)} 100%{transform:translateY(0)} }
   `);
 
@@ -88,6 +92,7 @@
     else if (fkhsStatusPending) message = transportText('checkingProgress', 'Checking progress…');
     else if (fkhsLastStored) message = transportText('activitySaved', 'Your activity is saved.');
     else message = '';
+    var hadFocus = notice.contains?.(document.activeElement);
     notice.replaceChildren();
     notice.hidden = !message;
     var text = document.createElement('span'); text.textContent = message; notice.appendChild(text);
@@ -110,6 +115,11 @@
       retryRuntime.textContent = transportText('retryH5P', 'Retry H5P tracking');
       retryRuntime.addEventListener('click', function() { startH5PTracking(true); });
       notice.appendChild(retryRuntime);
+    }
+    if (hadFocus) {
+      var focusTarget = message ? (notice.querySelector('button, a') || notice) : panel;
+      focusTarget.tabIndex = focusTarget.matches('button, a') ? 0 : -1;
+      focusTarget.focus({preventScroll:true});
     }
   }
 
@@ -275,12 +285,24 @@
     return panel;
   }
 
+  function focusActivity(container) {
+    var target = container.querySelector('iframe.h5p-iframe, .h5p-container') || container;
+    if (target.tagName !== 'IFRAME') target.tabIndex = -1;
+    target.focus({preventScroll:true});
+    container.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'});
+  }
+
+  function escapeText(value) {
+    return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   function attachBadge(container, html, className, onClick){
     if (!container) return;
     [].slice.call(container.querySelectorAll('.fkhs-h5p-badge')).forEach(function(el){ el.remove(); });
-    var b = document.createElement('div');
+    var b = document.createElement(onClick ? 'button' : 'div');
+    if (onClick) b.type = 'button';
     b.className = 'fkhs-h5p-badge ' + className;
-    b.innerHTML = html;
+    b.textContent = html;
     if (onClick) b.addEventListener('click', onClick);
     container.appendChild(b);
   }
@@ -289,21 +311,29 @@
     if (!container) return;
     [].slice.call(container.querySelectorAll('.fkhs-h5p-overlay')).forEach(function(el){ el.remove(); });
     var ov = document.createElement('div'); ov.className = 'fkhs-h5p-overlay ' + (kind === 'pass' ? 'pass' : 'fail');
+    ov.setAttribute('role','group');
+    ov.setAttribute('aria-label', title);
     var inner = document.createElement('div'); inner.className = 'inner';
-    inner.innerHTML = '<strong>'+title+'</strong><div style="margin-top:.35rem">'+body+'</div>';
+    var heading = document.createElement('strong'); heading.textContent = title;
+    var detail = document.createElement('p'); detail.textContent = body;
+    inner.append(heading, detail);
     var row = document.createElement('div'); row.className = 'fkhs-row';
-    if (kind === 'pass') {
-      var close = document.createElement('button'); close.className = 'fkhs-close'; close.setAttribute('aria-label','Close'); close.innerHTML = '×';
-      close.addEventListener('click', function(){ ov.remove(); container.dataset.fkhsDismissed = '1'; });
-      ov.appendChild(close);
-      var again = document.createElement('button'); again.className = 'fkhs-btn-sm'; again.textContent = (window.fkH5P?.i18n?.practiceAgain || 'Practice again');
-      again.addEventListener('click', function(){ ov.remove(); container.dataset.fkhsDismissed = '1'; });
-      row.appendChild(again);
-    } else {
-      var retry = document.createElement('button'); retry.className = 'fkhs-btn-sm primary'; retry.textContent = (window.fkH5P?.i18n?.retryNow || 'Retry now');
-      retry.addEventListener('click', function(){ ov.remove(); container.scrollIntoView({ behavior:'smooth', block:'center' }); });
-      row.appendChild(retry);
+    function dismiss() {
+      ov.remove();
+      if (kind === 'pass') container.dataset.fkhsDismissed = '1';
+      focusActivity(container);
     }
+    var close = document.createElement('button'); close.type = 'button'; close.className = 'fkhs-btn-sm';
+    close.textContent = transportText('close', 'Close');
+    close.addEventListener('click', dismiss);
+    row.appendChild(close);
+    var retry = document.createElement('button'); retry.type = 'button'; retry.className = 'fkhs-btn-sm primary';
+    retry.textContent = kind === 'pass' ? transportText('practiceAgain','Practice again') : transportText('retryNow','Retry now');
+    retry.addEventListener('click', dismiss);
+    row.appendChild(retry);
+    ov.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dismiss(); }
+    });
     inner.appendChild(row); ov.appendChild(inner); container.appendChild(ov);
   }
 
@@ -387,10 +417,10 @@
         var needTxt = (typeof thr === 'number') ? (Math.round(thr * 100) / 100) + '%' : '—';
         var line = (thr > 0)
           ? ((window.fkH5P?.i18n?.statusRemainingItem || '%1$s — best %2$s, required %3$s')
-              .replace('%1$s', t.replace(/</g,'&lt;').replace(/>/g,'&gt;')).replace('%2$s', bestTxt).replace('%3$s', needTxt))
+              .replace('%1$s', t).replace('%2$s', bestTxt).replace('%3$s', needTxt))
           : ((window.fkH5P?.i18n?.statusRemainingComplete || '%1$s — not completed yet')
-              .replace('%1$s', t.replace(/</g,'&lt;').replace(/>/g,'&gt;')));
-        html += '<li><span class="fkhs-status-link" data-cid="'+item.content_id+'">'+ line +'</span></li>';
+              .replace('%1$s', t));
+        html += '<li><button type="button" class="fkhs-status-link" data-cid="'+Number(item.content_id)+'">'+ escapeText(line) +'</button></li>';
       });
       html += '</ul>';
 
@@ -404,7 +434,7 @@
         a.addEventListener('click', function(e){
           var cid = parseInt(e.currentTarget.getAttribute('data-cid'), 10);
           var targets = findH5PContainersById(cid);
-          if (targets.length) targets[0].scrollIntoView({ behavior:'smooth', block:'center' });
+          if (targets.length) focusActivity(targets[0]);
         });
       });
     }catch(e){}
@@ -727,7 +757,7 @@
 
               failTxt = (window.fkH5P?.i18n?.overlayNotPassed || 'Not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry.')
                 .replace('%1$s', format(best.raw)).replace('%2$s', format(best.max)).replace('%3$s', formatPct(threshold));
-              if (typeof bestPct === 'number') failTxt = failTxt.replace('Best score:', 'Best score (' + formatPct(bestPct) + '):');
+              // Keep localized sentences intact; the status panel already shows best percentage.
             } else {
               passedTxt = window.fkH5P?.i18n?.overlayCompleted || 'This task is completed.';
               failTxt   = window.fkH5P?.i18n?.overlayIncomplete || 'Not completed yet. Click to view.';
@@ -748,7 +778,7 @@
                     attachOverlay(t, 'pass', titlePassed, passedTxt);
                   }
                 } else {
-                  attachBadge(t, failTxt, 'fail', function(){ t.scrollIntoView({ behavior:'smooth', block:'center' }); });
+                  attachBadge(t, failTxt, 'fail', function(){ focusActivity(t); });
                   // Fail-overlay KUN etter evaluering (ikke på hver "progressed")
                   if (hasAttempt && wasEvaluated) {
                     if (t.dataset.fkhsFailShown === '1') return;

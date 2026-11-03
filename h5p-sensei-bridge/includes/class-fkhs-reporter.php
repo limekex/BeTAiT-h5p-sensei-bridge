@@ -83,6 +83,17 @@ class FKHS_Reporter {
 			wp_localize_script( 'fkhs-admin-report', 'fkhsAdmin', array(
 				'i18n' => array(
 					'sort'               => __( 'Sort', 'h5p-sensei-bridge' ),
+					'close' => __( 'Close', 'h5p-sensei-bridge' ),
+					'from' => __( 'From', 'h5p-sensei-bridge' ),
+					'to' => __( 'To', 'h5p-sensei-bridge' ),
+					'comparison' => __( 'Comparison', 'h5p-sensei-bridge' ),
+					'value' => __( 'Value', 'h5p-sensei-bridge' ),
+					'atLeast' => __( 'At least', 'h5p-sensei-bridge' ),
+					'atMost' => __( 'At most', 'h5p-sensei-bridge' ),
+					'rowsPerPage' => __( 'Rows per page', 'h5p-sensei-bridge' ),
+					'sortColumn' => __( 'Sort by %s', 'h5p-sensei-bridge' ),
+					'filterColumn' => __( 'Filter %s', 'h5p-sensei-bridge' ),
+					'activeFilterColumn' => __( 'Filter %s (active)', 'h5p-sensei-bridge' ),
 					'clickToFilter'      => __( 'Click to filter', 'h5p-sensei-bridge' ),
 					'filteredClickToEdit'=> __( 'Filtered – click to edit', 'h5p-sensei-bridge' ),
 					'filter'             => __( 'Filter', 'h5p-sensei-bridge' ),
@@ -139,19 +150,20 @@ class FKHS_Reporter {
 			$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT {$limit}", ARRAY_A );
 			?>
 			<div class="wrap">
-				<h1><?php esc_html_e( 'H5P → Sensei (latest attempts)', 'h5p-sensei-bridge' ); ?></h1>
+				<h1 id="fkhs-report-title"><?php esc_html_e( 'H5P → Sensei (latest attempts)', 'h5p-sensei-bridge' ); ?></h1>
 
+				<div class="fkhs-report-scroll" role="region" aria-labelledby="fkhs-report-title" tabindex="0">
 				<table id="fkhs-report-table" class="widefat striped">
 					<thead>
 						<tr>
-							<th data-key="date"><?php esc_html_e( 'Date', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="user"><?php esc_html_e( 'User', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="lesson"><?php esc_html_e( 'Lesson', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="h5p"><?php esc_html_e( 'H5P Content', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="score"><?php esc_html_e( 'Score', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="criterion"><?php esc_html_e( 'Criterion', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="passed"><?php esc_html_e( 'Passed', 'h5p-sensei-bridge' ); ?></th>
-							<th data-key="completed"><?php esc_html_e( 'Completed', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="date"><?php esc_html_e( 'Date', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="user"><?php esc_html_e( 'User', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="lesson"><?php esc_html_e( 'Lesson', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="h5p"><?php esc_html_e( 'H5P Content', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="score"><?php esc_html_e( 'Score', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="criterion"><?php esc_html_e( 'Criterion', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="passed"><?php esc_html_e( 'Passed', 'h5p-sensei-bridge' ); ?></th>
+							<th scope="col" data-key="completed"><?php esc_html_e( 'Completed', 'h5p-sensei-bridge' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -266,6 +278,7 @@ class FKHS_Reporter {
 					?>
 					</tbody>
 				</table>
+				</div>
 
 				<p class="description">
 					<?php

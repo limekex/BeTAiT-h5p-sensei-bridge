@@ -23,12 +23,15 @@
     rowsLabel: 'Rows: %d',
     any: 'Any',
     yes: 'Yes',
-    no: 'No'
+    no: 'No', close: 'Close', from: 'From', to: 'To', comparison: 'Comparison', value: 'Value',
+    atLeast: 'At least', atMost: 'At most', rowsPerPage: 'Rows per page',
+    sortColumn: 'Sort by %s', filterColumn: 'Filter %s', activeFilterColumn: 'Filter %s (active)'
   };
 
   // ---------- i18n helper ----------
 // i18n helper: bruk lokaliserte tekster fra PHP først, deretter wp.i18n som sekundær fallback.
 function t(key, fallback) {
+  fallback = fallback || MSG[key] || key;
   // 1) Først: våre lokaliserte strenger fra wp_localize_script
   if (window.fkhsAdmin && window.fkhsAdmin.i18n && window.fkhsAdmin.i18n[key]) {
     return window.fkhsAdmin.i18n[key];
@@ -54,6 +57,8 @@ function t(key, fallback) {
   var page = 1;
   var pageSize = 50;
   var openPop = null;
+  var popTrigger = null;
+  var filterSnapshot = null;
 
   var filters = {
     user: '',
@@ -80,9 +85,15 @@ function t(key, fallback) {
     removeGlobalClosers();
   }
   function onWinKey(e) {
+    if (e.key === 'Tab' && popOpen) {
+      var controls = $all('input, select, button, a[href]', popOpen).filter(function(el){ return !el.disabled; });
+      var first = controls[0], last = controls[controls.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
     if (e.key === 'Escape') {
+      e.preventDefault(); e.stopPropagation();
       closePop();
-      removeGlobalClosers();
     }
   }
   function addGlobalClosers() {
@@ -94,32 +105,48 @@ function t(key, fallback) {
   function $all(sel, ctx){ return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
   function toNum(v){ var n = parseFloat(v); return isNaN(n) ? null : n; }
   function cmp(a,b){ return a<b?-1:a>b?1:0; }
-  function closePop(){
-    if (openPop && openPop.parentNode) openPop.parentNode.removeChild(openPop);
-    openPop = null;
-    popOpen = null;
+  function closePop(restoreFocus = true, commit = false){
+    if (!openPop) return;
+    if (!commit && filterSnapshot) filters = filterSnapshot;
+    var trigger = popTrigger;
+    openPop.close();
+    openPop.remove();
+    openPop = null; popOpen = null; popTrigger = null; filterSnapshot = null;
+    removeGlobalClosers();
+    if (trigger) {
+      trigger.setAttribute('aria-expanded','false');
+      trigger.removeAttribute('aria-controls');
+      if (restoreFocus) trigger.focus();
+    }
   }
 
   function injectStyles() {
     var css = `
-      .fkhs-input,.fkhs-select{border:1px solid #ddd;border-radius:8px;padding:.35rem .5rem;font:inherit;background:#fff}
+      .fkhs-input,.fkhs-select{border:1px solid #64748b;border-radius:8px;padding:.35rem .5rem;font:inherit;background:#fff}
       .fkhs-btn{border:1px solid #ddd;border-radius:8px;padding:.35rem .6rem;background:#fff;cursor:pointer}
       .fkhs-btn:hover{background:#f6f6f6}
       .fkhs-pill{border:1px solid #ddd;border-radius:999px;padding:.25rem .6rem;background:#fafafa}
-      .fkhs-pagination{display:flex;gap:.5rem;align-items:center;margin:.75rem 0}
+      .fkhs-report-scroll{overflow-x:auto;max-width:100%}
+      .fkhs-pagination{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.75rem 0}
       .fkhs-header{position:relative; white-space:nowrap; user-select:none}
       .fkhs-head-wrap{display:inline-flex;align-items:center;gap:.35rem}
-      .fkhs-sort-btn{border:1px solid #ddd;border-radius:6px;padding:.1rem .35rem;background:#fff;font-size:12px;cursor:pointer;opacity:.8}
+      .fkhs-sort-btn{border:1px solid #ddd;border-radius:6px;padding:.1rem .35rem;background:#fff;font-size:12px;cursor:pointer;opacity:.8;min-width:32px;min-height:32px}
       .fkhs-sort-btn:hover{background:#f6f6f6;opacity:1}
-      .fkhs-pop{position:absolute;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.10);padding:.75rem;z-index:99999;min-width:240px}
-      .fkhs-pop h4{margin:.25rem 0 .5rem 0;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em}
-      .fkhs-pop .row{display:flex;gap:.5rem;margin:.35rem 0}
-      .fkhs-pop .row > * {flex:1}
+      .fkhs-pop{position:fixed;background:#fff;color:#1e293b;border:1px solid #64748b;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.20);padding:1rem;max-width:calc(100vw - 2rem);width:24rem;max-height:calc(100dvh - 2rem);overflow:auto;box-sizing:border-box}
+      .fkhs-pop::backdrop{background:rgba(0,0,0,.35)}
+      .fkhs-pop h4{margin:0 0 1rem;font-size:1rem}
+      .fkhs-pop .row{display:flex;flex-wrap:wrap;gap:.5rem;margin:.35rem 0}
+      .fkhs-pop .row > * {flex:1;min-width:0}
+      .fkhs-pop label{display:block;margin-block:.5rem}
+      .fkhs-pop input,.fkhs-pop select{display:block;width:100%;max-width:100%;box-sizing:border-box}
+      .fkhs-pop fieldset{min-width:0;border:0;padding:0}
+      .fkhs-pop button,.fkhs-pagination button{min-height:36px}
+      .fkhs-sort-btn:focus-visible,.fkhs-filter-icon:focus-visible,.fkhs-btn:focus-visible{outline:3px solid #175985;outline-offset:2px}
       .fkhs-small{font-size:12px;color:#666}
-      .fkhs-filter-icon{display:inline-flex;align-items:center;justify-content:center;margin-left:.25rem;opacity:.45;transition:opacity .15s,transform .15s}
-      .fkhs-header:hover .fkhs-filter-icon{opacity:.85;transform:translateY(-1px)}
+      .fkhs-filter-icon{border:1px solid #ddd; background:#fff; cursor:pointer; min-width:32px; min-height:32px; display:inline-flex;align-items:center;justify-content:center;margin-left:.25rem;opacity:1;transition:opacity .15s,transform .15s}
+      .fkhs-header:hover .fkhs-filter-icon{opacity:1;transform:translateY(-1px)}
       .fkhs-filter-icon svg{width:.8rem;height:.8rem;display:block;fill:currentColor;color:#64748b}
-      .fkhs-filter-active .fkhs-filter-icon svg{color:#3478f6}
+      .fkhs-filter-active .fkhs-filter-icon svg{color:#175985}
       .fkhs-filter-dot{width:.5rem;height:.5rem;border-radius:50%;background:#3478f6;display:inline-block;margin-left:.35rem;vertical-align:middle;opacity:.85}
       .fkhs-filter-inactive .fkhs-filter-dot{display:none}
     `;
@@ -131,7 +158,7 @@ function t(key, fallback) {
   function parseRows() {
     var table = document.getElementById(TABLE_ID);
     if (!table) return;
-    var bodyRows = $all('tbody tr', table);
+    var bodyRows = $all('tbody tr[data-user]', table);
     rows = bodyRows.map(function(tr){
       var d = tr.dataset;
       return {
@@ -232,6 +259,9 @@ function t(key, fallback) {
     var to = Math.min(total, end);
     var info = $('#fkhs-page-info');
     if (info) info.textContent = total ? (from + '–' + to + ' / ' + total) : '0 / 0';
+    var prev = $('#fkhs-prev'), next = $('#fkhs-next');
+    if (prev) prev.disabled = page <= 1;
+    if (next) next.disabled = end >= total;
   }
 
   function rebuild() {
@@ -250,7 +280,8 @@ function t(key, fallback) {
 
     $all('thead th', table).forEach(function(th){
       var key = th.getAttribute('data-key');
-      if (!key) return;
+      if (!key || key === 'h5p') return;
+      var columnLabel = th.textContent.trim();
 
       th.classList.add('fkhs-header');
 
@@ -264,7 +295,8 @@ function t(key, fallback) {
       var sortBtn = document.createElement('button');
       sortBtn.type = 'button';
       sortBtn.className = 'fkhs-sort-btn';
-      sortBtn.title = t('sort');
+      sortBtn.title = t('sortColumn').replace('%s', columnLabel);
+      sortBtn.setAttribute('aria-label', sortBtn.title);
       sortBtn.textContent = '↕';
       sortBtn.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation();
@@ -283,21 +315,25 @@ function t(key, fallback) {
       wrap.appendChild(sortBtn);
 
       // Alltid synlig filter-ikon
-      var ficon = document.createElement('span');
+      var ficon = document.createElement('button');
+      ficon.type = 'button';
+      ficon.setAttribute('aria-haspopup','dialog');
+      ficon.setAttribute('aria-expanded','false');
+      ficon.dataset.columnLabel = columnLabel;
       ficon.className = 'fkhs-filter-icon';
       ficon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"/></svg>';
       wrap.appendChild(ficon);
 
       var dot = document.createElement('span');
       dot.className = 'fkhs-filter-dot';
+      dot.setAttribute('aria-hidden','true');
       wrap.appendChild(dot);
 
       th.classList.add('fkhs-filter-inactive');
-      th.title = t('clickToFilter');
 
-      th.addEventListener('click', function(e){
-        if (e.target === sortBtn) return;
-        openFilterPopup(th, key);
+      ficon.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        openFilterPopup(ficon, key);
       });
     });
   }
@@ -310,9 +346,11 @@ function t(key, fallback) {
       var btn = th.querySelector('.fkhs-sort-btn');
       if (!btn) return;
       if (key === sortKey) {
+        th.setAttribute('aria-sort', sortDir === 'asc' ? 'ascending' : 'descending');
         btn.textContent = (sortDir === 'asc' ? '▲' : '▼');
         btn.style.opacity = '1';
       } else {
+        th.removeAttribute('aria-sort');
         btn.textContent = '↕';
         btn.style.opacity = '.8';
       }
@@ -340,23 +378,29 @@ function t(key, fallback) {
       var active = isColumnFiltered(key);
       th.classList.toggle('fkhs-filter-active',  active);
       th.classList.toggle('fkhs-filter-inactive', !active);
-      th.title = active ? t('filteredClickToEdit') : t('clickToFilter');
+      var filterBtn = th.querySelector('.fkhs-filter-icon');
+      if (filterBtn) {
+        filterBtn.title = t(active ? 'activeFilterColumn' : 'filterColumn').replace('%s', filterBtn.dataset.columnLabel);
+        filterBtn.setAttribute('aria-label',filterBtn.title);
+      }
     });
   }
 
   function openFilterPopup(th, key) {
-    closePop();
-
-    var rect = th.getBoundingClientRect();
-    var pop = document.createElement('div');
+    closePop(false);
+    filterSnapshot = Object.assign({}, filters);
+    popTrigger = th;
+    var pop = document.createElement('dialog');
     pop.className = 'fkhs-pop';
-    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
-    var left = Math.min(window.scrollX + rect.left, window.scrollX + (document.documentElement.clientWidth - 260));
-    pop.style.left = left + 'px';
+    pop.id = 'fkhs-filter-dialog';
+    pop.setAttribute('aria-labelledby','fkhs-filter-title');
+    th.setAttribute('aria-expanded','true');
+    th.setAttribute('aria-controls',pop.id);
     pop.addEventListener('click', function(e){ e.stopPropagation(); });
 
     var h = document.createElement('h4');
-    h.textContent = t('filter');
+    h.id = 'fkhs-filter-title';
+    h.textContent = t('filterColumn').replace('%s', th.dataset.columnLabel);
     pop.appendChild(h);
 
     var content = document.createElement('div');
@@ -390,18 +434,19 @@ function t(key, fallback) {
       clearFilterForKey(key);
       updateFilterIndicators();
       rebuild();
-      closePop();
+      closePop(true, true);
       removeGlobalClosers();
     });
 
     var applyBtn = btn(t('apply'), function(){
       updateFilterIndicators();
       rebuild();
-      closePop();
+      closePop(true, true);
       removeGlobalClosers();
     });
 
-    actions.append(clearBtn, applyBtn);
+    actions.style.flexWrap = 'wrap';
+    actions.append(btn(t('close'), function(){ closePop(); }), clearBtn, applyBtn);
 
     pop.appendChild(content);
     pop.appendChild(actions);
@@ -410,6 +455,9 @@ function t(key, fallback) {
     openPop = pop;
     popOpen = pop;
 
+    pop.addEventListener('cancel', function(e){ e.preventDefault(); closePop(); });
+    pop.showModal();
+    pop.querySelector('input, select, button').focus();
     addGlobalClosers();
   }
 
@@ -424,6 +472,10 @@ function t(key, fallback) {
   }
 
   // popup UI builders
+  function labelControl(text, control) {
+    var label = document.createElement('label'); label.textContent = text; label.appendChild(control); return label;
+  }
+
   function buildTextRow(labelText, which){
     var wrap = document.createElement('div'); wrap.className='row';
     var label = document.createElement('label'); label.textContent = labelText; label.className='fkhs-small';
@@ -432,7 +484,7 @@ function t(key, fallback) {
     input.addEventListener('input', function(e){
       if (which==='user') filters.user=e.target.value.trim(); else filters.lesson=e.target.value.trim();
     });
-    wrap.append(label, input); return wrap;
+    label.appendChild(input); wrap.appendChild(label); return wrap;
   }
 
   function buildDateRow(){
@@ -441,7 +493,7 @@ function t(key, fallback) {
     var r = document.createElement('div'); r.className='row';
     var from = document.createElement('input'); from.type='date'; from.className='fkhs-input'; from.value=filters.dateFrom; from.addEventListener('change', function(e){ filters.dateFrom=e.target.value; });
     var to = document.createElement('input'); to.type='date'; to.className='fkhs-input'; to.value=filters.dateTo; to.addEventListener('change', function(e){ filters.dateTo=e.target.value; });
-    r.append(from,to); wrap.append(l,r); return wrap;
+    r.append(labelControl(t('from'),from),labelControl(t('to'),to)); wrap.append(l,r); return wrap;
   }
 
   function buildCompareRow(labelText, cmpKey, valKey){
@@ -449,13 +501,13 @@ function t(key, fallback) {
     var l = document.createElement('div'); l.textContent=labelText; l.className='fkhs-small';
     var r = document.createElement('div'); r.className='row';
     var sel = document.createElement('select'); sel.className='fkhs-select';
-    [['any', t('any')], ['ge','≥'], ['le','≤']].forEach(function(p){
+    [['any', t('any')], ['ge',t('atLeast')], ['le',t('atMost')]].forEach(function(p){
       var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o);
     });
     sel.value = filters[cmpKey]; sel.addEventListener('change', function(e){ filters[cmpKey]=e.target.value; });
     var num = document.createElement('input'); num.type='number'; num.className='fkhs-input'; num.min='0'; num.max='100'; num.step='1'; num.placeholder='%'; num.value=filters[valKey];
     num.addEventListener('input', function(e){ filters[valKey]=e.target.value; });
-    r.append(sel,num); wrap.append(l,r); return wrap;
+    r.append(labelControl(labelText + ' — ' + t('comparison'),sel),labelControl(labelText + ' — ' + t('value'),num)); wrap.append(l,r); return wrap;
   }
 
   function buildYNRow(labelText, key){
@@ -467,7 +519,7 @@ function t(key, fallback) {
       var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o);
     });
     sel.value = filters[key]; sel.addEventListener('change', function(e){ filters[key]=e.target.value; });
-    r.append(sel); wrap.append(l,r); return wrap;
+    r.append(labelControl(labelText,sel)); wrap.append(r); return wrap;
   }
 
   function btn(label, onClick){
@@ -495,13 +547,16 @@ function t(key, fallback) {
     var info = document.createElement('span');
     info.id='fkhs-page-info';
     info.className='fkhs-pill';
+    info.setAttribute('role','status');
 
     var next = btn(t('next') + ' ›', function(){
       var total = filtered.length; var pages = Math.max(1, Math.ceil(total/pageSize));
       if (page < pages) { page++; renderPage(); }
     });
 
+    prev.id = 'fkhs-prev'; next.id = 'fkhs-next';
     var sizeSel = document.createElement('select');
+    sizeSel.setAttribute('aria-label',t('rowsPerPage'));
     sizeSel.className='fkhs-select';
     PAGE_SIZES.forEach(function(s){
       var o=document.createElement('option'); o.value=String(s);
@@ -518,7 +573,8 @@ function t(key, fallback) {
     bar.append(reset, prev, info, next, sizeSel);
 
     var table = document.getElementById(TABLE_ID);
-    if (table && table.parentNode) table.parentNode.insertBefore(bar, table.nextSibling);
+    var anchor = table && (table.closest('.fkhs-report-scroll') || table);
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(bar, anchor.nextSibling);
   }
 
   function init() {
@@ -528,14 +584,14 @@ function t(key, fallback) {
     injectStyles();
     parseRows();
     attachHeaders();
+    buildPagination();
     updateFilterIndicators();
     applyFilters();
     sortData();
     renderPage();
-    buildPagination();
-
-    window.addEventListener('scroll', closePop);
+    updateSortBtns();
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

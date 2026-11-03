@@ -130,13 +130,12 @@ class FKHS_Plugin {
 		wp_register_script(
 			'fkhs-h5p-bridge',
 			$script_url,
-			array(), // No hard deps; H5P exposes window.H5P when present.
+			array( 'wp-i18n' ), // H5P still exposes window.H5P independently.
 			$asset_ver,
 			true
 		);
 
-		// Når du enqueuer skriptet:
-		wp_set_script_translations('fkhs-admin-report', 'h5p-sensei-bridge', plugin_dir_path(__FILE__) . 'languages');
+		wp_set_script_translations( 'fkhs-h5p-bridge', 'h5p-sensei-bridge', FKHS_DIR . 'languages' );
 
 
 		/**
@@ -179,6 +178,7 @@ class FKHS_Plugin {
           'overlayIncomplete'    => __( 'Not completed yet. Click to view.', 'h5p-sensei-bridge' ),
           'practiceAgain'        => __( 'Practice again', 'h5p-sensei-bridge' ),
           'retryNow'             => __( 'Retry now', 'h5p-sensei-bridge' ),
+          'close'                => __( 'Close', 'h5p-sensei-bridge' ),
 
           // Tittel/labels i statuspanel
           'statusHeading'        => __( 'Lesson tasks status', 'h5p-sensei-bridge' ),
