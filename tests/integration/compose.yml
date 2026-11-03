@@ -22,7 +22,7 @@ services:
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: fixture-only
-      WORDPRESS_CONFIG_EXTRA: "define('FKHS_INTEGRATION_TESTS', true);"
+      WORDPRESS_CONFIG_EXTRA: "define('FKHS_INTEGRATION_TESTS', true); define('WP_ENVIRONMENT_TYPE', 'local');"
       WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
     volumes:
       - site:/var/www/html

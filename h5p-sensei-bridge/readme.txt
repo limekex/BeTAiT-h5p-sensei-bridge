@@ -35,6 +35,7 @@ https://github.com/limekex/BeTAiT-h5p-sensei-bridge/blob/main/docs/HSB_010_VALID
 == Changelog ==
 
 = 1.2.0-dev (unreleased) =
+* H5P progress block and [fkhs_progress] shortcode for the current learner in one lesson.
 * Shared access and progression checks; actual completion signals and durable duplicate receipts.
 * Native Sensei completion guards, accessible feedback and Bokmål translations.
 * Scoped, paginated reporting and explicit privacy/retention tools.

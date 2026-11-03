@@ -33,6 +33,12 @@ foreach (array('en_US','nb_NO') as $locale) {
         $expected=$handle==='fkhs-editor'?($locale==='nb_NO'?'H5P-aktivitet':'H5P activity'):($locale==='nb_NO'?'Lukk':'Close');
         if (($strings[$key] ?? null) !== $expected) throw new RuntimeException('Textdomain did not translate '.$handle.' for '.$locale);
         ++$checks;
+        if ($handle !== 'fkhs-admin-report') {
+            $key=$handle==='fkhs-editor'?'Progress':'progressTitle';
+            $expected=$handle==='fkhs-editor'?($locale==='nb_NO'?'H5P-progresjon':'H5P progress'):($locale==='nb_NO'?'Din H5P-progresjon':'Your H5P progress');
+            if ($strings[$key] !== $expected) throw new RuntimeException('Progress locale mismatch: '.$handle);
+            ++$checks;
+        }
         foreach ($strings as $value) {
             if (!is_string($value) || $value === '') throw new RuntimeException('Missing localized control label');
         }

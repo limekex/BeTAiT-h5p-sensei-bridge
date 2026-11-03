@@ -28,6 +28,7 @@ class FKHS_Editor {
         $style='assets/css/h5p-sensei-editor.css';
         wp_register_style('fkhs-editor',FKHS_URL.$style,array(),FKHS_VER.'-'.substr(hash_file('sha256',FKHS_DIR.$style),0,12));
         register_block_type('fkhs/activity',array('api_version'=>3,'editor_style'=>'fkhs-editor','attributes'=>array('contentId'=>array('type'=>'integer','default'=>0)), 'supports'=>array('html'=>false,'reusable'=>false)));
+        register_block_type('fkhs/progress',array('api_version'=>3,'editor_style'=>'fkhs-editor','supports'=>array('html'=>false,'reusable'=>false)));
     }
 
     public static function enqueue(): void {
@@ -65,6 +66,8 @@ class FKHS_Editor {
             'OnlyLesson'=>__( 'This block is available only in Sensei lessons.', 'h5p-sensei-bridge' ),
             'Legacy'=>__( 'Inherit uses the legacy activity value, then the lesson value, then 70.', 'h5p-sensei-bridge' ),
             'Selected'=>__( 'Selected activity', 'h5p-sensei-bridge' ),
+            'Progress'=>__( 'H5P progress', 'h5p-sensei-bridge' ),
+            'ProgressHelp'=>__( 'Shows this learner’s activities, results and remaining H5P requirements in the current lesson. Progress loads on the lesson page.', 'h5p-sensei-bridge' ),
             'Details'=>__( 'About this threshold', 'h5p-sensei-bridge' ),
         );
         wp_localize_script('fkhs-editor','fkhsEditor',array('labels'=>$labels));

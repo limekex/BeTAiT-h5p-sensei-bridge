@@ -62,6 +62,104 @@
 
   function transportText(key, fallback) { return window.fkH5P?.i18n?.[key] || fallback; }
 
+  // Every placement consumes the existing request/queue state; it never binds H5P
+  // or fetches progress independently. Keep old footer behavior without a placement.
+  var fkhsProgressItems = null;
+  function progressWidgets() { return Array.from(document.querySelectorAll('[data-fkhs-progress]')); }
+
+  function appendTransportActions(target, failure) {
+    if (failure && !failure.auth && failure.retryable !== false && !fkhsSending) {
+      var retry = document.createElement('button');
+      retry.type = 'button'; retry.className = 'fkhs-btn-sm';
+      retry.textContent = transportText('retrySaving', 'Retry');
+      retry.addEventListener('click', retryTransport); target.appendChild(retry);
+    }
+    if (failure?.auth && window.fkH5P?.loginUrl) {
+      var login = document.createElement('a');
+      login.href = window.fkH5P.loginUrl; login.target = '_blank'; login.rel = 'noopener';
+      login.textContent = transportText('signInAgain', 'Sign in in a new tab'); target.appendChild(login);
+    }
+    if (fkhsRuntimeState === 'failed' && !failure && !fkhsInputError) {
+      var runtime = document.createElement('button'); runtime.type = 'button'; runtime.className = 'fkhs-btn-sm';
+      runtime.textContent = transportText('retryH5P', 'Retry H5P tracking');
+      runtime.addEventListener('click', function () { startH5PTracking(true); }); target.appendChild(runtime);
+    }
+  }
+
+  function renderProgressBody(body, items) {
+    var focusedId = body.contains(document.activeElement) ? document.activeElement.dataset.contentId : null;
+    body.replaceChildren();
+    function node(tag, text, className) {
+      var el = document.createElement(tag); el.textContent = text;
+      if (className) el.className = className;
+      return el;
+    }
+    var title = node('h2', transportText('progressTitle', 'Your H5P progress')); title.tabIndex = -1; body.appendChild(title);
+    var required = items.filter(function (item) { return item.counts_for_gate; });
+    var met = required.filter(function (item) { return item.requirement_met; }).length;
+    var summary = !items.length ? transportText('progressEmpty', 'This lesson has no H5P activities.') :
+      !required.length ? transportText('progressNoRequired', 'No H5P activities currently block progression.') :
+      transportText('progressCount', '%1$d of %2$d H5P requirements met').replace('%1$d', met).replace('%2$d', required.length);
+    var count = node('p', summary); count.setAttribute('role', 'status'); body.appendChild(count);
+    if (required.length) {
+      var bar = document.createElement('progress'); bar.max = required.length; bar.value = met;
+      bar.setAttribute('aria-label', summary); body.appendChild(bar);
+      if (met === required.length) body.appendChild(node('p', transportText('progressMet', 'All H5P requirements are met.')));
+    }
+    var list = document.createElement('ul'); list.className = 'fkhs-progress-list';
+    items.forEach(function (item) {
+      var row = document.createElement('li'), detail = document.createElement('div'); detail.className = 'fkhs-progress-detail';
+      var title = item.title || transportText('progressActivity', 'Activity #%d').replace('%d', item.content_id);
+      var targets = findH5PContainersById(item.content_id);
+      var label = node(targets.length ? 'button' : 'strong', title, targets.length ? 'fkhs-progress-link' : '');
+      if (targets.length) {
+        label.type = 'button'; label.dataset.contentId = String(item.content_id);
+        label.addEventListener('click', function () { var target = findH5PContainersById(item.content_id)[0]; if (target) focusActivity(target); });
+      }
+      detail.appendChild(label);
+      var criterion = item.threshold > 0 ? transportText('progressRequired', 'Required score: %s').replace('%s', formatPct(item.threshold)) :
+        item.counts_for_gate ? transportText('progressCompletion', 'Requires completion') : transportText('progressOptional', 'Optional');
+      var best = transportText('progressBest', 'Best score: %s').replace('%s', formatPct(item.best?.pct));
+      if (item.counts_for_gate) detail.appendChild(node('p', criterion + (item.threshold > 0 ? ' · ' + best : '')));
+      var state = item.requirement_met ? (item.threshold > 0 ? transportText('taskPassed', 'Task passed') : transportText('progressComplete', 'Completed')) :
+        !item.counts_for_gate ? transportText('progressOptional', 'Optional') :
+        !(item.latest?.has_attempt ?? item.has_attempt) ? transportText('progressNotStarted', 'Not started') :
+        item.threshold > 0 ? transportText('notPassedYet', 'Not passed yet') : transportText('notCompletedYet', 'Not completed yet');
+      row.append(detail, node('span', state, 'fkhs-progress-state' + (item.requirement_met ? ' is-met' : ''))); list.appendChild(row);
+    });
+    if (items.length) body.appendChild(list);
+    if (items.some(function (item) { return item.threshold === 0; })) body.appendChild(node('p', transportText('progressOptionalHelp', 'Optional activities must be completed once you have started an attempt.')));
+    if (focusedId) {
+      var target = Array.from(body.querySelectorAll('button[data-content-id]')).find(function (button) { return button.dataset.contentId === focusedId; }) || title;
+      target.focus({preventScroll:true});
+    }
+  }
+
+  function syncProgressWidgets(message, failure) {
+    progressWidgets().forEach(function (root) {
+      var body = root.querySelector('.fkhs-progress-body'), notice = root.querySelector('.fkhs-progress-message');
+      if (!body) {
+        root.replaceChildren(); root.fkhsRenderedItems = null;
+        notice = document.createElement('div'); notice.className = 'fkhs-progress-message'; notice.setAttribute('role', 'status');
+        body = document.createElement('div'); body.className = 'fkhs-progress-body'; root.append(notice, body);
+      }
+      var hadFocus = notice.contains(document.activeElement);
+      var blocked = fkhsTransportBlocked || fkhsProgressItems === null;
+      root.setAttribute('aria-busy', blocked && !failure && fkhsRuntimeState !== 'failed' && !fkhsInputError ? 'true' : 'false');
+      body.hidden = blocked;
+      if (fkhsProgressItems !== null && root.fkhsRenderedItems !== fkhsProgressItems) {
+        renderProgressBody(body, fkhsProgressItems); root.fkhsRenderedItems = fkhsProgressItems;
+      }
+      notice.replaceChildren(); notice.hidden = !message;
+      if (message) { var span = document.createElement('span'); span.textContent = message; notice.appendChild(span); appendTransportActions(notice, failure); }
+      if (hadFocus) {
+        var focus = message ? (notice.querySelector('button, a') || notice) : (body.querySelector('h2') || root);
+        if (!focus.matches('button, a')) focus.tabIndex = -1;
+        focus.focus({preventScroll:true});
+      }
+    });
+  }
+
   function syncTransport() {
     fkhsTransportBlocked = !!(fkhsQueue.length || fkhsSaveError || fkhsStatusError || fkhsInputError || fkhsStatusPending || fkhsRuntimeState === 'waiting' || fkhsRuntimeState === 'failed');
     setQuizButtonVisibility(window.fkhsGatePassed);
@@ -69,7 +167,7 @@
     var redirectNotice = document.getElementById('fkhs-redirect-notice');
     if (redirectNotice) redirectNotice.hidden = window.fkhsGatePassed && !fkhsTransportBlocked;
     // A previous pass must not say "You can continue" while saving is unresolved.
-    panel.hidden = fkhsTransportBlocked;
+    panel.hidden = fkhsTransportBlocked || progressWidgets().length > 0;
     var notice = document.getElementById('fkhs-save-status');
     if (!notice) {
       notice = document.createElement('div');
@@ -96,26 +194,9 @@
     notice.replaceChildren();
     notice.hidden = !message;
     var text = document.createElement('span'); text.textContent = message; notice.appendChild(text);
-    if (failure && !failure.auth && failure.retryable !== false && !fkhsSending) {
-      var retry = document.createElement('button');
-      retry.type = 'button'; retry.className = 'fkhs-btn-sm';
-      retry.textContent = transportText('retrySaving', 'Retry');
-      retry.addEventListener('click', retryTransport);
-      notice.appendChild(retry);
-    }
-    if (failure?.auth && window.fkH5P?.loginUrl) {
-      var login = document.createElement('a');
-      login.href = window.fkH5P.loginUrl; login.target = '_blank'; login.rel = 'noopener';
-      login.textContent = transportText('signInAgain', 'Sign in in a new tab');
-      notice.appendChild(login);
-    }
-    if (fkhsRuntimeState === 'failed' && !failure && !fkhsInputError) {
-      var retryRuntime = document.createElement('button');
-      retryRuntime.type = 'button'; retryRuntime.className = 'fkhs-btn-sm';
-      retryRuntime.textContent = transportText('retryH5P', 'Retry H5P tracking');
-      retryRuntime.addEventListener('click', function() { startH5PTracking(true); });
-      notice.appendChild(retryRuntime);
-    }
+    appendTransportActions(notice, failure);
+    syncProgressWidgets(message, failure);
+    if (progressWidgets().length) notice.hidden = true;
     if (hadFocus) {
       var focusTarget = message ? (notice.querySelector('button, a') || notice) : panel;
       focusTarget.tabIndex = focusTarget.matches('button, a') ? 0 : -1;
@@ -707,6 +788,11 @@
         .then(function(json){
           if (generation !== fkhsStatusVersion) return false;
           if (!Array.isArray(json.items)) throw { retryable: true, reason: 'invalid_status' };
+          if (progressWidgets().length && !json.items.every(function (item) {
+            return item && Number.isSafeInteger(item.content_id) && item.content_id > 0 &&
+              typeof item.counts_for_gate === 'boolean' && typeof item.requirement_met === 'boolean' &&
+              typeof item.threshold === 'number' && Number.isFinite(item.threshold);
+          })) throw { retryable: true, reason: 'invalid_status' };
           fkhsStatusError = null; fkhsStatusPending = false;
           var overallPassed = true;
 
@@ -806,6 +892,7 @@
           setQuizButtonVisibility(window.fkhsGatePassed);
 
           // Statuspanel bruker samme gating-definisjon
+          fkhsProgressItems = json.items;
           renderStatusPanelFromItems(json.items);
           syncTransport();
           return true;

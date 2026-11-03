@@ -136,6 +136,16 @@
       return Number.isSafeInteger(id) && id > 0 ? h(wp.element.RawHTML, null, '[h5p id="' + id + '"]') : null;
     }
   });
+  wp.blocks.registerBlockType('fkhs/progress', {
+    apiVersion: 3, title: text('Progress'), category: 'widgets', icon: 'chart-bar',
+    supports: { html: false, reusable: false },
+    edit: function () {
+      return h('div', wp.blockEditor.useBlockProps({ className: 'fkhs-editor-card' }),
+        h('strong', { className: 'fkhs-editor-title' }, text('Progress')),
+        h('p', null, text('ProgressHelp')));
+    },
+    save: function () { return h(wp.element.RawHTML, null, '[fkhs_progress]'); }
+  });
   function Overview() {
     var content = wp.data.useSelect(function (select) { return wp.blocks.serialize(select('core/block-editor').getBlocks()); }, []);
     var ids = idsFromContent(content);

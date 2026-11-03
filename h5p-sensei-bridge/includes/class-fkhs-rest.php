@@ -68,13 +68,47 @@ class FKHS_REST {
 			'fkhs/v1',
 			'/h5p-status',
 			array(
-				'methods'             => 'GET',
-				'permission_callback' => function () { return is_user_logged_in(); },
-				'callback'            => array( __CLASS__, 'status' ),
-				'args'                => array(
+				array(
+					'methods'             => 'GET',
+					'permission_callback' => static function () { return is_user_logged_in(); },
+					'callback'            => array( __CLASS__, 'status' ),
+					'args'                => array(
 						'lesson_id' => array( 'type' => 'integer', 'minimum' => 1, 'required' => true ),
+					),
 				),
+				'schema' => array( __CLASS__, 'status_schema' ),
 			)
+		);
+	}
+
+	/** Public contract for the existing, authenticated, current-learner read API. */
+	public static function status_schema(): array {
+		$number = array( 'type' => array( 'number', 'null' ) );
+		$boolean = array( 'type' => 'boolean' );
+		$scores = array( 'raw' => $number, 'max' => $number, 'pct' => $number );
+		$latest = $scores + array( 'passed' => $boolean, 'completed' => $boolean, 'has_attempt' => $boolean );
+		$item = array(
+			'content_id' => array( 'type' => 'integer', 'minimum' => 1 ),
+			'title' => array( 'type' => 'string' ),
+			'type' => array( 'type' => 'string' ),
+			'threshold' => array( 'type' => 'number' ),
+			'latest' => array( 'type' => 'object', 'required' => array_keys( $latest ), 'properties' => $latest ),
+			'best' => array( 'type' => 'object', 'required' => array_keys( $scores ), 'properties' => $scores ),
+			'has_attempt' => $boolean,
+			'counts_for_gate' => $boolean,
+			'requirement_met' => $boolean,
+		);
+		return array(
+			'$schema' => 'http://json-schema.org/draft-04/schema#',
+			'title' => 'fkhs-lesson-progress',
+			'type' => 'object',
+			'required' => array( 'ok', 'items', 'required', 'passed' ),
+			'properties' => array(
+				'ok' => array( 'type' => 'boolean', 'enum' => array( true ) ),
+				'items' => array( 'type' => 'array', 'items' => array( 'type' => 'object', 'required' => array_keys( $item ), 'properties' => $item ) ),
+				'required' => $boolean,
+				'passed' => $boolean,
+			),
 		);
 	}
 

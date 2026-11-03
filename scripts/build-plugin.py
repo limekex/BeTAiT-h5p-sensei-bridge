@@ -55,13 +55,13 @@ def package_files(root):
             len(parts) == 1 and parts[0] in (SLUG + ".php", "uninstall.php", "readme.txt", "LICENSE")
             or len(parts) == 2 and parts[0] == "includes" and re.fullmatch(r"class-fkhs-[a-z-]+\.php", parts[1])
             or len(parts) == 3 and parts[:2] == ("assets", "js") and re.fullmatch(r"h5p-sensei-[a-z-]+\.js", parts[2])
-            or parts == ("assets", "css", "h5p-sensei-editor.css")
+            or len(parts) == 3 and parts[:2] == ("assets", "css") and parts[2] in ("h5p-sensei-editor.css", "h5p-sensei-progress.css")
             or len(parts) == 2 and parts[0] == "languages" and re.fullmatch(r"h5p-sensei-bridge(?:-[A-Za-z0-9_-]+)?\.(?:po|mo|pot|json)", parts[1])
         )
         if not allowed or (root / path).is_symlink() or not (root / path).is_file():
             raise ValueError("Unexpected package entry: " + name)
         result[name] = (root / path).read_bytes()
-    for name in (SLUG + ".php", "uninstall.php", "readme.txt", "LICENSE", "includes/class-fkhs-plugin.php", "includes/class-fkhs-privacy.php", "includes/class-fkhs-editor.php", "assets/css/h5p-sensei-editor.css", "assets/js/h5p-sensei-editor.js", "assets/js/h5p-sensei-bridge.js", "languages/h5p-sensei-bridge-nb_NO.mo"):
+    for name in (SLUG + ".php", "uninstall.php", "readme.txt", "LICENSE", "includes/class-fkhs-plugin.php", "includes/class-fkhs-privacy.php", "includes/class-fkhs-editor.php", "includes/class-fkhs-progress-view.php", "assets/css/h5p-sensei-progress.css", "assets/css/h5p-sensei-editor.css", "assets/js/h5p-sensei-editor.js", "assets/js/h5p-sensei-bridge.js", "languages/h5p-sensei-bridge-nb_NO.mo"):
         if SLUG + "/" + name not in result:
             raise ValueError("Missing tracked runtime file: " + name)
     return result

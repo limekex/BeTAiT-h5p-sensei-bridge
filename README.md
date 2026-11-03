@@ -9,6 +9,7 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 ## Features
 
+- Place the **H5P progress** block or `[fkhs_progress]` in a lesson to show the current learner’s requirements and results; see the [progress UI/API contract](docs/PROGRESS_API.md).
 - Search and insert existing H5P activities with the **H5P activity** Gutenberg block in Sensei lessons.
 - Set thresholds during placement; the block and lesson metabox share unsaved values.
 - Listens to H5P xAPI events in-lesson.
@@ -132,6 +133,7 @@ See [HSB-009's retention contract, operator commands and rollback limits](docs/H
 
 ### `GET /wp-json/fkhs/v1/h5p-status?lesson_id=123`
 
+- **Contract:** [Lesson progress UI and external API](docs/PROGRESS_API.md), including response schema, native Application Password authentication and failure handling.
 - **Auth:** same lesson access policy as POST; results always belong to the authenticated user. Unenrolled preview/open-course viewers cannot use the bridge API solely because Sensei allows viewing the lesson.
 - **Response:**
   ```json
