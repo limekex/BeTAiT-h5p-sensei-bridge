@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: BeTAiT H5P → Sensei Bridge 0.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/h5p-sensei-"
 "bridge\n"
-"POT-Creation-Date: 2026-11-03T15:50:32+00:00\n"
+"POT-Creation-Date: 2026-11-03T16:21:53+00:00\n"
 "PO-Revision-Date: 2026-11-03 16:30+0100\n"
 "Last-Translator: BeTAiT\n"
 "Language-Team: Norsk bokmål\n"
@@ -232,6 +232,143 @@ msgstr "Ikke fullført ennå"
 msgid "View task"
 msgstr "Vis oppgaven"
 
+#: includes/class-fkhs-privacy.php:21 includes/class-fkhs-privacy.php:29
+#: includes/class-fkhs-privacy.php:113
+msgid "H5P → Sensei attempts"
+msgstr "H5P → Sensei-forsøk"
+
+#: includes/class-fkhs-privacy.php:37
+msgid ""
+"The H5P → Sensei Bridge stores user, lesson and activity identifiers, a "
+"lesson title snapshot, scores, completion/pass flags, event identifiers, a "
+"payload hash and the stored site time. By default it also retains the "
+"submitted xAPI statement, which may include names, email addresses, answers "
+"and contextual data. Administrators can configure future raw-statement "
+"storage and explicitly clear older raw statements without removing progress. "
+"Attempts are retained by default, including after deactivation, uninstall or "
+"account deletion. WordPress personal-data tools can export attempts for an "
+"existing account; erasure requires explicit site policy approval and may "
+"change H5P completion requirements. Set your retention period and coordinate "
+"erasure with Sensei, backups and any external stores."
+msgstr ""
+"H5P → Sensei Bridge lagrer ID-er for bruker, leksjon og aktivitet, et "
+"øyeblikksbilde av leksjonstittelen, poeng, status for fullført og bestått, "
+"hendelses-ID, en kontrollsum av innholdet og lagret nettstedstid. Som "
+"standard beholdes også den innsendte xAPI-meldingen, som kan inneholde navn, "
+"e-postadresser, svar og kontekstopplysninger. Administratorer kan "
+"konfigurere fremtidig lagring av rådata og uttrykkelig fjerne eldre "
+"råmeldinger uten å fjerne progresjon. Forsøk beholdes som standard, også ved "
+"deaktivering, avinstallering eller sletting av konto. WordPress-verktøyene "
+"for personopplysninger kan eksportere forsøk for en eksisterende konto. "
+"Sletting må tillates uttrykkelig av nettstedet og kan endre oppfyllelsen av "
+"H5P-krav. Fastsett lagringstiden og samordne sletting med Sensei, "
+"sikkerhetskopier og eventuelle eksterne datalagre."
+
+#: includes/class-fkhs-privacy.php:47
+msgid "You cannot manage these personal data."
+msgstr "Du har ikke tilgang til å behandle disse personopplysningene."
+
+#: includes/class-fkhs-privacy.php:50
+msgid "Invalid personal-data request."
+msgstr "Ugyldig forespørsel om personopplysninger."
+
+#: includes/class-fkhs-privacy.php:67
+msgid ""
+"Personal-data storage is unavailable. Retry the request; completion has not "
+"been confirmed."
+msgstr ""
+"Lageret for personopplysninger er utilgjengelig. Prøv forespørselen på nytt. "
+"Fullføring er ikke bekreftet."
+
+#: includes/class-fkhs-privacy.php:90
+msgid "Attempt ID"
+msgstr "Forsøks-ID"
+
+#: includes/class-fkhs-privacy.php:91
+msgid "User ID"
+msgstr "Bruker-ID"
+
+#: includes/class-fkhs-privacy.php:92
+msgid "Lesson ID"
+msgstr "Leksjons-ID"
+
+#: includes/class-fkhs-privacy.php:93
+msgid "Stored lesson title"
+msgstr "Lagret leksjonstittel"
+
+#: includes/class-fkhs-privacy.php:94
+msgid "H5P content ID"
+msgstr "H5P-innholds-ID"
+
+#: includes/class-fkhs-privacy.php:95
+msgid "Raw score"
+msgstr "Oppnådde poeng"
+
+#: includes/class-fkhs-privacy.php:96
+msgid "Maximum score"
+msgstr "Maksimale poeng"
+
+#: includes/class-fkhs-privacy.php:97
+msgid "Stored passed flag"
+msgstr "Lagret bestått-status"
+
+#: includes/class-fkhs-privacy.php:98
+msgid "Stored completed flag"
+msgstr "Lagret fullføringsstatus"
+
+#: includes/class-fkhs-privacy.php:99
+msgid "Event ID"
+msgstr "Hendelses-ID"
+
+#: includes/class-fkhs-privacy.php:100
+msgid "Payload hash"
+msgstr "Kontrollsum av innholdet"
+
+#: includes/class-fkhs-privacy.php:101
+msgid "Stored site time"
+msgstr "Lagret nettstedstid"
+
+#: includes/class-fkhs-privacy.php:102
+msgid "Raw xAPI statement"
+msgstr "Rå xAPI-melding"
+
+#: includes/class-fkhs-privacy.php:106
+msgid ""
+"An xAPI statement exceeds the automatic export limit. An administrator must "
+"arrange a complete manual export; no truncated export has been reported as "
+"complete."
+msgstr ""
+"En xAPI-melding overskrider grensen for automatisk eksport. En administrator "
+"må sørge for en fullstendig manuell eksport. En avkortet eksport er ikke "
+"rapportert som fullført."
+
+#: includes/class-fkhs-privacy.php:111
+msgid "Not stored"
+msgstr "Ikke lagret"
+
+#: includes/class-fkhs-privacy.php:138
+msgid ""
+"H5P attempts were retained because the site has not enabled their erasure. "
+"Removing them can change H5P completion requirements. Coordinate this "
+"separately with Sensei progress and backups."
+msgstr ""
+"H5P-forsøk ble beholdt fordi nettstedet ikke har aktivert sletting av dem. "
+"Sletting kan endre oppfyllelsen av H5P-krav. Samordne dette separat med "
+"Sensei-progresjon og sikkerhetskopier."
+
+#: includes/class-fkhs-privacy.php:156
+msgid "Administrator access is required for raw-data cleanup."
+msgstr "Administratortilgang kreves for opprydding i rådata."
+
+#: includes/class-fkhs-privacy.php:197
+msgid ""
+"Use a valid cutoff date, nonnegative cursor IDs and a batch size of 1–200. "
+"Applying cleanup requires the reviewed through-ID."
+msgstr ""
+"Bruk en gyldig grensedato, ikke-negative markør-ID-er og en puljestørrelse "
+"på 1–200. Opprydding krever øvre ID-grense fra en kontrollert "
+"forhåndsvisning."
+
 #: includes/class-fkhs-report-query.php:16
 #: includes/class-fkhs-report-query.php:99
 msgid "You cannot view this report."
@@ -244,7 +381,9 @@ msgstr "Ugyldige rapportfiltre."
 #: includes/class-fkhs-report-query.php:126 includes/class-fkhs-reporter.php:89
 msgid ""
 "Could not load attempts. Retry, or sign in again if your session expired."
-msgstr "Kunne ikke laste forsøk. Prøv igjen, eller logg inn på nytt hvis økten er utløpt."
+msgstr ""
+"Kunne ikke laste forsøk. Prøv igjen, eller logg inn på nytt hvis økten er "
+"utløpt."
 
 #: includes/class-fkhs-reporter.php:39 includes/class-fkhs-reporter.php:40
 msgid "H5P → Sensei"
@@ -408,13 +547,17 @@ msgid ""
 "they own. Dates use the stored site time. Passed and completed are stored "
 "attempt flags; the criterion is the current effective threshold and cannot "
 "be globally filtered or sorted."
-msgstr "Søket omfatter alle forsøk du har tilgang til. Lærere ser leksjoner i egne kurs. Datoer bruker lagret nettstedstid. Bestått og fullført viser lagret forsøksstatus. Kriteriet viser gjeldende terskel og kan ikke brukes til global filtrering eller sortering."
+msgstr ""
+"Søket omfatter alle forsøk du har tilgang til. Lærere ser leksjoner i egne "
+"kurs. Datoer bruker lagret nettstedstid. Bestått og fullført viser lagret "
+"forsøksstatus. Kriteriet viser gjeldende terskel og kan ikke brukes til "
+"global filtrering eller sortering."
 
 #: includes/class-fkhs-reporter.php:167
 msgid "JavaScript is required to search this report."
 msgstr "JavaScript må være aktivert for å søke i rapporten."
 
-#: includes/class-fkhs-reporter.php:212
+#: includes/class-fkhs-reporter.php:213
 msgid "Completion only"
 msgstr "Kun fullføring"
 

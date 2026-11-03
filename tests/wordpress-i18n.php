@@ -34,6 +34,10 @@ foreach (array('en_US','nb_NO') as $locale) {
         }
         ++$checks;
     }
+    $privacy=FKHS_Privacy::exporters(array());
+    $expected=$locale==='nb_NO'?'H5P → Sensei-forsøk':'H5P → Sensei attempts';
+    if ($privacy['h5p-sensei-bridge']['exporter_friendly_name']!==$expected) throw new RuntimeException('Privacy exporter locale mismatch');
+    ++$checks;
     remove_filter('locale',$locale_filter,99);
     remove_filter('determine_locale',$locale_filter,99);
 }

@@ -1,3 +1,5 @@
 <?php
-// Bevisst tom – vi dropper ikke tabellen automatisk for å bevare data.
-// Hvis du ønsker å slette alt ved uninstall, kan du legge inn DROP TABLE her.
+/** Uninstall retains attempts, schema metadata and lesson thresholds on every site. */
+if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) { exit; }
+// No DROP, DELETE, user cleanup or multisite traversal. Reinstallation may reuse data.
+// Raw statement cleanup and approved personal-data erasure are explicit tools only.

@@ -347,6 +347,7 @@ class FKHS_REST {
 		global $wpdb;
 		$table        = $wpdb->prefix . FKHS_TABLE;
 		$lesson_title = get_the_title( $lesson_id );
+		$stored_statement = FKHS_Privacy::statement_to_store( $statement_json, (int)$user_id, (int)$lesson_id, (int)$content_id );
 
 		$previous_suppression = $wpdb->suppress_errors( true );
 		$inserted = $wpdb->insert(
@@ -360,7 +361,7 @@ class FKHS_REST {
 				'max_score'    => is_null( $max ) ? null : (float) $max,
 				'passed'       => $passed ? 1 : 0,
 				'completed'    => $completed ? 1 : 0,
-				'statement'    => $statement_json,
+				'statement'    => $stored_statement,
 				'event_id'     => $event_id,
 				'payload_hash' => $payload_hash,
 				'created_at'   => current_time( 'mysql' ),

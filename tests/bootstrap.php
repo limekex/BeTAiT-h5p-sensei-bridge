@@ -133,4 +133,4 @@ class FakeDB {
 }
 $wpdb = new FakeDB();
 $base = __DIR__ . '/../h5p-sensei-bridge/includes/';
-foreach (array('helpers', 'progress', 'sensei', 'rest', 'metabox') as $name) require $base . 'class-fkhs-' . $name . '.php';
+foreach (array('helpers', 'progress', 'sensei', 'privacy', 'rest', 'metabox') as $name) require $base . 'class-fkhs-' . $name . '.php';

@@ -40,6 +40,8 @@ define( 'FKHS_DB_VER', '0.3.0' );                    // DB schema version for at
 require_once FKHS_DIR . 'includes/class-fkhs-plugin.php';
 require_once FKHS_DIR . 'includes/class-fkhs-helpers.php';
 require_once FKHS_DIR . 'includes/class-fkhs-progress.php';
+require_once FKHS_DIR . 'includes/class-fkhs-privacy.php';
+require_once FKHS_DIR . 'includes/class-fkhs-lifecycle-cli.php';
 require_once FKHS_DIR . 'includes/class-fkhs-rest.php';
 require_once FKHS_DIR . 'includes/class-fkhs-sensei.php';
 require_once FKHS_DIR . 'includes/class-fkhs-report-query.php';
@@ -80,29 +82,7 @@ add_action(
  */
 register_activation_hook( __FILE__, array( 'FKHS_Plugin', 'activate' ) );
 
-/**
- * Runs on plugin uninstall (entirely removing the plugin).
- * Keep data by default for safety/audit. If you want to drop the table,
- * implement DROP TABLE here.
- *
- * @return void
- */
-register_uninstall_hook(
-	__FILE__,
-	'fkhs_uninstall'
-);
-
-if ( ! function_exists( 'fkhs_uninstall' ) ) {
-	/**
-	 * Uninstall callback.
-	 *
-	 * @return void
-	 */
-	function fkhs_uninstall() {
-		// Intentionally left blank to preserve data.
-		// Example (dangerous): DROP TABLE {$wpdb->prefix} . FKHS_TABLE;
-	}
-}
+// uninstall.php is the single uninstall entry point and deliberately retains data.
 
 /**
  * -------------------------------------------------------------------------
@@ -116,6 +96,7 @@ add_action(
 	static function () {
 		FKHS_Plugin::init();
 		FKHS_REST::init();
+		FKHS_Privacy::init();
 		FKHS_Sensei::init();
 		FKHS_Reporter::init();
 		FKHS_Metabox::init();

@@ -83,6 +83,12 @@ The report uses `GET /wp-json/fkhs/v1/report` with cookie authentication and a R
 
 ---
 
+## Data retention and personal-data tools
+
+Attempts and raw xAPI are retained by default, including after uninstall. WordPress's personal-data tools now export bridge attempts in bounded pages; full attempt erasure remains disabled until an explicit site policy opts in. `wp fkhs cleanup-statements` previews a bounded batch by default and can explicitly clear older raw statements while preserving scores, completion and duplicate-delivery receipts. Future raw storage can also be disabled without losing progress.
+
+See [HSB-009's retention contract, operator commands and rollback limits](docs/HSB_009_VALIDATION.md) before enabling cleanup or erasure. No automatic expiry, account-deletion purge or table drop is enabled.
+
 ## REST API
 
 ### `POST /wp-json/fkhs/v1/h5p-xapi`

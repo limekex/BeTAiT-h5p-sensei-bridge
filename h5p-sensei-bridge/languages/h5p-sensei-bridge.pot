@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T15:50:32+00:00\n"
+"POT-Creation-Date: 2026-11-03T16:21:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: h5p-sensei-bridge\n"
@@ -201,6 +201,100 @@ msgstr ""
 msgid "View task"
 msgstr ""
 
+#: includes/class-fkhs-privacy.php:21
+#: includes/class-fkhs-privacy.php:29
+#: includes/class-fkhs-privacy.php:113
+msgid "H5P → Sensei attempts"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:37
+msgid "The H5P → Sensei Bridge stores user, lesson and activity identifiers, a lesson title snapshot, scores, completion/pass flags, event identifiers, a payload hash and the stored site time. By default it also retains the submitted xAPI statement, which may include names, email addresses, answers and contextual data. Administrators can configure future raw-statement storage and explicitly clear older raw statements without removing progress. Attempts are retained by default, including after deactivation, uninstall or account deletion. WordPress personal-data tools can export attempts for an existing account; erasure requires explicit site policy approval and may change H5P completion requirements. Set your retention period and coordinate erasure with Sensei, backups and any external stores."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:47
+msgid "You cannot manage these personal data."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:50
+msgid "Invalid personal-data request."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:67
+msgid "Personal-data storage is unavailable. Retry the request; completion has not been confirmed."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:90
+msgid "Attempt ID"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:91
+msgid "User ID"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:92
+msgid "Lesson ID"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:93
+msgid "Stored lesson title"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:94
+msgid "H5P content ID"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:95
+msgid "Raw score"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:96
+msgid "Maximum score"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:97
+msgid "Stored passed flag"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:98
+msgid "Stored completed flag"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:99
+msgid "Event ID"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:100
+msgid "Payload hash"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:101
+msgid "Stored site time"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:102
+msgid "Raw xAPI statement"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:106
+msgid "An xAPI statement exceeds the automatic export limit. An administrator must arrange a complete manual export; no truncated export has been reported as complete."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:111
+msgid "Not stored"
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:138
+msgid "H5P attempts were retained because the site has not enabled their erasure. Removing them can change H5P completion requirements. Coordinate this separately with Sensei progress and backups."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:156
+msgid "Administrator access is required for raw-data cleanup."
+msgstr ""
+
+#: includes/class-fkhs-privacy.php:197
+msgid "Use a valid cutoff date, nonnegative cursor IDs and a batch size of 1–200. Applying cleanup requires the reviewed through-ID."
+msgstr ""
+
 #: includes/class-fkhs-report-query.php:16
 #: includes/class-fkhs-report-query.php:99
 msgid "You cannot view this report."
@@ -384,7 +478,7 @@ msgstr ""
 msgid "JavaScript is required to search this report."
 msgstr ""
 
-#: includes/class-fkhs-reporter.php:212
+#: includes/class-fkhs-reporter.php:213
 msgid "Completion only"
 msgstr ""
 
