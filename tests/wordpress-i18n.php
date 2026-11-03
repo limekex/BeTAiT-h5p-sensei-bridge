@@ -18,7 +18,7 @@ foreach (array('en_US','nb_NO') as $locale) {
     unload_textdomain('h5p-sensei-bridge',true);
     $wp_scripts = new WP_Scripts();
     FKHS_Plugin::enqueue_front();
-    FKHS_Reporter::enqueue_admin('toplevel_page_fkhs-report');FKHS_Editor::enqueue();
+    FKHS_Reporter::enqueue_admin('toplevel_page_fkhs-report');FKHS_Editor::enqueue();FKHS_Progress_View::enqueue_editor();
     foreach (array('fkhs-h5p-bridge','fkhs-admin-report','fkhs-editor') as $handle) {
         $script = $wp_scripts->registered[$handle] ?? null;
         if (!$script || $script->textdomain !== 'h5p-sensei-bridge' || $script->translations_path !== FKHS_DIR.'languages' || !in_array('wp-i18n',$script->deps,true)) {
@@ -33,7 +33,7 @@ foreach (array('en_US','nb_NO') as $locale) {
         $expected=$handle==='fkhs-editor'?($locale==='nb_NO'?'H5P-aktivitet':'H5P activity'):($locale==='nb_NO'?'Lukk':'Close');
         if (($strings[$key] ?? null) !== $expected) throw new RuntimeException('Textdomain did not translate '.$handle.' for '.$locale);
         ++$checks;
-        if ($handle !== 'fkhs-admin-report') {
+        if ($handle === 'fkhs-h5p-bridge') {
             $key=$handle==='fkhs-editor'?'Progress':'progressTitle';
             $expected=$handle==='fkhs-editor'?($locale==='nb_NO'?'H5P-progresjon':'H5P progress'):($locale==='nb_NO'?'Din H5P-progresjon':'Your H5P progress');
             if ($strings[$key] !== $expected) throw new RuntimeException('Progress locale mismatch: '.$handle);
@@ -44,6 +44,10 @@ foreach (array('en_US','nb_NO') as $locale) {
         }
         ++$checks;
     }
+    $progress_data=$wp_scripts->get_data('fkhs-progress-editor','data');
+    $progress_labels=json_decode(substr($progress_data,strlen('var fkhsProgressBlock = '),-1),true);
+    if($progress_labels['title']!==($locale==='nb_NO'?'H5P-progresjon':'H5P progress'))throw new RuntimeException('Template progress locale mismatch');
+    ++$checks;
     $privacy=FKHS_Privacy::exporters(array());
     $expected=$locale==='nb_NO'?'H5P → Sensei-forsøk':'H5P → Sensei attempts';
     if ($privacy['h5p-sensei-bridge']['exporter_friendly_name']!==$expected) throw new RuntimeException('Privacy exporter locale mismatch');
@@ -53,18 +57,18 @@ foreach (array('en_US','nb_NO') as $locale) {
 }
 // A real packaged install uses fixed mtimes. Changing bytes with the SAME mtime
 // must invalidate both script URLs, including two builds of one dev version.
-foreach (array('fkhs-h5p-bridge'=>'h5p-sensei-bridge.js','fkhs-admin-report'=>'h5p-sensei-admin-report.js','fkhs-editor'=>'h5p-sensei-editor.js') as $handle=>$filename) {
+foreach (array('fkhs-h5p-bridge'=>'h5p-sensei-bridge.js','fkhs-admin-report'=>'h5p-sensei-admin-report.js','fkhs-editor'=>'h5p-sensei-editor.js','fkhs-progress-editor'=>'h5p-sensei-progress-editor.js') as $handle=>$filename) {
     $path=FKHS_DIR.'assets/js/'.$filename;
     $bytes=file_get_contents($path);$mtime=filemtime($path);
     $version=$wp_scripts->registered[$handle]->ver;
     try {
         file_put_contents($path,$bytes."\n// Disposable same-mtime cache test.\n");touch($path,$mtime);
-        $wp_scripts=new WP_Scripts();FKHS_Plugin::enqueue_front();FKHS_Reporter::enqueue_admin('toplevel_page_fkhs-report');FKHS_Editor::enqueue();
+        $wp_scripts=new WP_Scripts();FKHS_Plugin::enqueue_front();FKHS_Reporter::enqueue_admin('toplevel_page_fkhs-report');FKHS_Editor::enqueue();FKHS_Progress_View::enqueue_editor();
         clearstatcache(true,$path);
         if($wp_scripts->registered[$handle]->ver===$version || filemtime($path)!==$mtime)throw new RuntimeException('Stale script version after same-mtime update: '.$handle);
         ++$checks;
     } finally { file_put_contents($path,$bytes);touch($path,$mtime); }
-    $wp_scripts=new WP_Scripts();FKHS_Plugin::enqueue_front();FKHS_Reporter::enqueue_admin('toplevel_page_fkhs-report');FKHS_Editor::enqueue();
+    $wp_scripts=new WP_Scripts();FKHS_Plugin::enqueue_front();FKHS_Reporter::enqueue_admin('toplevel_page_fkhs-report');FKHS_Editor::enqueue();FKHS_Progress_View::enqueue_editor();
     if($wp_scripts->registered[$handle]->ver!==$version)throw new RuntimeException('Restored script version mismatch: '.$handle);
     ++$checks;
 }

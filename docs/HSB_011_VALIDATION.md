@@ -24,3 +24,13 @@ GitHub's full eight-job matrix must pass for the committed candidate before deli
 Existing site-specific HSB-001–010 release gates remain. This change does not establish screen-reader speech, other browser compatibility, live proxy/cache behavior, arbitrary H5P libraries' completion signals or deployed access/filter customizations. External HTTPS/proxy forwarding and site Application Password policy need validation at the consuming site; disposable HTTP tests prove WordPress native authentication and isolation, not production TLS configuration.
 
 No new progress calculation, historical regrading, attempt rewrite, delegated teacher API, course aggregate, external credential store, LRS, notification or release deployment is included. Revert the feature commit to roll back runtime behavior; stored attempts remain intact. The plain shortcode in placed blocks can be removed through the editor if reverting to a version without this feature.
+
+## Template placement follow-up — 2026-11-03
+
+The progress block now has a standalone editor script, loaded in the Site Editor and template-part editor as well as lesson editing. It appears in Design and supports wide/full alignment and margin/padding. Lesson registry/threshold UI stays scoped to lesson authoring.
+
+A dynamic PHP render callback renders the placeholder directly in template markup; it does not depend on `do_shortcode` running on the entire template. Existing blocks retain their literal shortcode fallback and render once. Both block and standalone shortcode return an empty string outside a single lesson or when the queried lesson has no H5P IDs. Foreign Query Loop context is suppressed. The editor keeps an explanatory placeholder for selection and placement.
+
+Targeted real-WordPress assertions now also cover Site Editor asset isolation, direct nested template rendering, saved-block compatibility, dynamic spacing, empty lessons, non-lesson pages and foreign post context. The suite has 35 progress/API and 32 locale/enqueue assertions (950 named integration assertions overall). Local PHP, Node and package checks pass. The full GitHub matrix is required for the delivered commit.
+
+Manual Site Editor browser verification was not performed: automatic approval review rejected creating a local administrator fixture because that broader access was not explicitly authorized. No administrator was created and no existing templates were changed. Site Editor enqueue behavior and template rendering were verified in the disposable WordPress integration environment; the prior lesson/student desktop/mobile verification remains as recorded above.

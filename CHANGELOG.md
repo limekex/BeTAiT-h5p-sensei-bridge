@@ -1,6 +1,7 @@
 ## [Unreleased] — 1.2.0-dev stabilization candidate
 
 ### Added
+- Make H5P progress available in template/template-part editing with width and spacing controls; render directly on the server and hide the block/shortcode when the current page is not a lesson with H5P activities.
 - Add lesson-scoped H5P progress block/shortcode sharing the existing save queue and canonical status. Publish the existing read API schema and test native Application Password access isolation (HSB-011).
 - Added the Sensei lesson H5P activity block with scoped, paginated registry search, literal shortcode placement and shared block/metabox threshold controls. Native saves, autosaves and revisions preserve lesson-scoped overrides, including explicit zero; synced activity patterns must be detached.
 

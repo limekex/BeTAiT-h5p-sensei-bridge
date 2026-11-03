@@ -9,7 +9,7 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 ## Features
 
-- Place the **H5P progress** block or `[fkhs_progress]` in a lesson to show the current learner’s requirements and results; see the [progress UI/API contract](docs/PROGRESS_API.md).
+- Place the **H5P progress** layout block in a template or lesson (or use `[fkhs_progress]`) to show the current learner’s requirements and results. It is hidden outside lessons and in lessons without H5P; see the [progress UI/API contract](docs/PROGRESS_API.md).
 - Search and insert existing H5P activities with the **H5P activity** Gutenberg block in Sensei lessons.
 - Set thresholds during placement; the block and lesson metabox share unsaved values.
 - Listens to H5P xAPI events in-lesson.
