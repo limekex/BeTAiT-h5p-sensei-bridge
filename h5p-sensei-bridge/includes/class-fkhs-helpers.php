@@ -24,14 +24,28 @@ if ( ! class_exists( 'FKHS_Thresholds' ) ) {
 			if ( isset( self::$cache[ $key ] ) ) {
 				return self::$cache[ $key ];
 			}
+			return self::$cache[ $key ] = self::calculate( $lesson_id, $content_id, $user_id, get_post_meta( $lesson_id, '_fkhs_threshold_map', true ) );
+		}
+
+		/** Editor preview uses the same filters, without writing or caching pending values. */
+		public static function preview( int $lesson_id, int $content_id, int $user_id, ?float $override ): float {
+			return self::calculate( $lesson_id, $content_id, $user_id, null === $override ? array() : array( $content_id => $override ) );
+		}
+
+		public static function inherited( int $lesson_id, int $content_id ): float {
+			$legacy = get_post_meta( $lesson_id, '_fkhs_h5p_thresholds', true );
+			$value = is_array( $legacy ) && isset( $legacy[$content_id] ) && is_numeric( $legacy[$content_id] ) ? $legacy[$content_id] : get_post_meta( $lesson_id, '_fkhs_pass_threshold', true );
+			return is_numeric( $value ) ? max( 0.0, min( 100.0, (float)$value ) ) : 70.0;
+		}
+
+		private static function calculate( int $lesson_id, ?int $content_id, int $user_id, $map ): float {
 
 			// 1) New per-H5P map
-			$map = get_post_meta( $lesson_id, '_fkhs_threshold_map', true );
 			if ( is_array( $map ) && $content_id && isset( $map[ $content_id ] ) && is_numeric( $map[ $content_id ] ) ) {
 				$thr = max( 0.0, min( 100.0, (float) $map[ $content_id ] ) );
 				$thr = (float) apply_filters( 'fkhs_threshold_for_item', $thr, $lesson_id, $content_id, $user_id );
 				$thr = (float) apply_filters( 'fkhs_threshold_for_content', $thr, $lesson_id, $content_id, $user_id );
-				return self::$cache[ $key ] = max( 0.0, min( 100.0, (float) apply_filters( 'fkhs_threshold_for_lesson', $thr, $lesson_id, $user_id ) ) );
+				return max( 0.0, min( 100.0, (float) apply_filters( 'fkhs_threshold_for_lesson', $thr, $lesson_id, $user_id ) ) );
 			}
 
 			// 2) Legacy per-H5P map
@@ -40,7 +54,7 @@ if ( ! class_exists( 'FKHS_Thresholds' ) ) {
 				$thr = max( 0.0, min( 100.0, (float) $legacy[ $content_id ] ) );
 				$thr = (float) apply_filters( 'fkhs_threshold_for_item', $thr, $lesson_id, $content_id, $user_id );
 				$thr = (float) apply_filters( 'fkhs_threshold_for_content', $thr, $lesson_id, $content_id, $user_id );
-				return self::$cache[ $key ] = max( 0.0, min( 100.0, (float) apply_filters( 'fkhs_threshold_for_lesson', $thr, $lesson_id, $user_id ) ) );
+				return max( 0.0, min( 100.0, (float) apply_filters( 'fkhs_threshold_for_lesson', $thr, $lesson_id, $user_id ) ) );
 			}
 
 			// 3) Lesson-level (BC)
@@ -48,7 +62,7 @@ if ( ! class_exists( 'FKHS_Thresholds' ) ) {
 			$lesson_thr = is_numeric( $lesson_thr ) ? (float) $lesson_thr : 70.0;
 			$lesson_thr = max( 0.0, min( 100.0, (float) apply_filters( 'fkhs_threshold_for_lesson', $lesson_thr, $lesson_id, $user_id ) ) );
 
-			return self::$cache[ $key ] = $lesson_thr;
+			return $lesson_thr;
 		}
 	}
 }

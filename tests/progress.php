@@ -35,7 +35,8 @@ $meta[16]['_fkhs_pass_threshold'] = 0;
 check(FKHS_Thresholds::get_effective_threshold(16,1,7) === 0.0, 'Legacy zero survives');
 // Saving the new map must preserve rollback metadata and attempts.
 $meta[20] = array('_fkhs_pass_threshold'=>65, '_fkhs_require_h5p_pass'=>1);
-$_POST = array('fkhs_lesson_meta_nonce'=>'test', 'fkhs_threshold_map'=>array(1=>'0',2=>'90'));
+$contents[20]='[h5p id="1"] [h5p id="2"]';
+$_POST = array('fkhs_lesson_meta_nonce'=>'test', 'fkhs_threshold_form'=>'1', 'fkhs_threshold_snapshot'=>FKHS_Editor::map_token(array()), 'fkhs_threshold_map'=>array(1=>'0',2=>'90'));
 $before = $wpdb->rows; FKHS_Metabox::save(20);
 check($meta[20]['_fkhs_pass_threshold'] === 65 && $meta[20]['_fkhs_require_h5p_pass'] === 1, 'Legacy settings retained');
 check($meta[20]['_fkhs_threshold_map'] === array(1=>0.0,2=>90.0), 'Map saved');

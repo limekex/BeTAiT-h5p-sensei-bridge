@@ -51,8 +51,12 @@ class FKHS_Sensei {
 	 * @return int[] Unique content IDs.
 	 */
 	public static function get_h5p_ids_for_lesson( int $lesson_id ): array {
+		return self::get_h5p_ids_from_content( (string) get_post_field( 'post_content', $lesson_id ) );
+	}
+
+	/** Shared discovery for persisted lessons and pending editor content. */
+	public static function get_h5p_ids_from_content( string $content ): array {
 		$ids = [];
-		$content = (string) get_post_field( 'post_content', $lesson_id );
 
 		// Use WordPress parsing: escaped shortcodes and attributes such as data-id
 		// must not grant activity membership.

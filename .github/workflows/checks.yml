@@ -47,6 +47,7 @@ jobs:
         run: |
           node --check h5p-sensei-bridge/assets/js/h5p-sensei-bridge.js
           node --check h5p-sensei-bridge/assets/js/h5p-sensei-admin-report.js
+          node --check h5p-sensei-bridge/assets/js/h5p-sensei-editor.js
       - name: JavaScript regressions
         run: |
           npm ci --ignore-scripts

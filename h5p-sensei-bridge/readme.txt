@@ -18,6 +18,8 @@ Requires active Sensei LMS and Interactive Content – H5P. Tested integration v
 
 Positive thresholds require a passing result. A zero threshold is optional before the first stored attempt, then requires an actual completion signal. Opening an activity does not manufacture completion. Existing shortcodes and lesson threshold metadata remain supported.
 
+In Sensei lesson editing, insert the H5P activity block to search existing activities and place their shortcode. Set a threshold immediately or inherit it; the block and lesson metabox share the same values before saving. Repeated activities share one threshold per lesson. Detach synced patterns containing activity blocks before use.
+
 Attempts and raw statements are retained by default, including after uninstall. WordPress privacy tools export attempts; complete erasure requires explicit site policy opt-in. Administrator CLI cleanup previews raw-statement removal by default and preserves scores and receipts.
 
 == Installation ==
@@ -37,6 +39,7 @@ https://github.com/limekex/BeTAiT-h5p-sensei-bridge/blob/main/docs/HSB_010_VALID
 * Native Sensei completion guards, accessible feedback and Bokmål translations.
 * Scoped, paginated reporting and explicit privacy/retention tools.
 * Installable package with aligned metadata and tested lifecycle.
+* H5P activity block with registry search and synchronized placement/metabox thresholds.
 
 == Upgrade Notice ==
 

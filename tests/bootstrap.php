@@ -25,6 +25,7 @@ function post_password_required( $id ) { global $passwords; return $passwords[$i
 function __( $text, $domain = null ) { return $text; }
 function get_the_title( $id ) { return 'Fixture lesson'; }
 function wp_json_encode( $value ) { return json_encode($value); }
+function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function current_time( $type ) { return '2026-11-02 12:00:00'; }
 function shortcode_exists( $name ) { global $h5p_available; return $h5p_available; }
 // Minimal parser doubles for policy tests. Real parser cases live in wordpress-rest.php.
@@ -133,4 +134,4 @@ class FakeDB {
 }
 $wpdb = new FakeDB();
 $base = __DIR__ . '/../h5p-sensei-bridge/includes/';
-foreach (array('helpers', 'progress', 'sensei', 'privacy', 'rest', 'metabox') as $name) require $base . 'class-fkhs-' . $name . '.php';
+foreach (array('helpers', 'editor', 'progress', 'sensei', 'privacy', 'rest', 'metabox') as $name) require $base . 'class-fkhs-' . $name . '.php';

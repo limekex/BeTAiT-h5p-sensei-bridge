@@ -9,6 +9,8 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 ## Features
 
+- Search and insert existing H5P activities with the **H5P activity** Gutenberg block in Sensei lessons.
+- Set thresholds during placement; the block and lesson metabox share unsaved values.
 - Listens to H5P xAPI events in-lesson.
 - Logs attempts (latest + best score) per content & lesson.
 - Resolves thresholds per H5P activity, falling back to legacy activity/lesson settings and then 70%.
@@ -48,6 +50,14 @@ For source development, copy or symlink the nested `h5p-sensei-bridge/` director
 ---
 
 For development checks, run `npm ci --ignore-scripts`, `npm test` and `bash tests/php-checks.sh`. jsdom is used only in tests; the plugin needs no Node runtime or build. Bokmål translations and keyboard/mobile coverage are documented in [HSB-007](docs/HSB_007_VALIDATION.md).
+
+## Lesson authoring
+
+Insert **H5P activity** in a Sensei lesson, search by title or ID, and select an existing activity. The block saves `[h5p id="ID"]` at that position. Choose **Inherit threshold** or enter an explicit value from 0 to 100. The lesson metabox shows all activities, including unsaved blocks and manually entered shortcodes, and updates immediately with the block controls.
+
+Repeated uses of the same activity share one lesson threshold. Replacing an activity uses the replacement's existing override or inherited value. Copying a block to another lesson carries the activity ID only; the destination lesson controls its threshold. Removing a block preserves historical attempts and any unused override. Inherit removes the current override and uses the legacy activity setting, then the lesson setting, then 70; runtime filters can change the learner's effective requirement.
+
+WordPress owns normal saves, undo/redo, autosaves and revisions. Activity search follows H5P visibility permissions and requires edit access to the specific lesson. Detach synced patterns containing these blocks before using them in a lesson; references hide activity IDs from lesson discovery. Other post types are outside the feature's scope. See [HSB-013 behavior, tests and limits](docs/HSB_013_VALIDATION.md).
 
 ## Frontend Flow
 
@@ -161,7 +171,7 @@ Verify actual proxy/cache behavior on staging; no explicit `Vary` header is set 
 
 ### JS (frontend & admin)
 - Uses **`wp_set_script_translations`** with text domain `h5p-sensei-bridge`.
-- Also has **fallback via `wp_localize_script`** (`fkH5P.i18n` / `fkhsAdmin.i18n`) if `wp.i18n` is not available.
+- Also has **fallback via `wp_localize_script`** (`fkH5P.i18n` / `fkhsAdmin.i18n` / `fkhsEditor.labels`) if `wp.i18n` is not available.
 
 ### WP-CLI (translation workflow)
 ```bash

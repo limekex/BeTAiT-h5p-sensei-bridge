@@ -41,6 +41,7 @@ define( 'FKHS_DB_VER', '0.3.0' );                    // DB schema version for at
  */
 require_once FKHS_DIR . 'includes/class-fkhs-plugin.php';
 require_once FKHS_DIR . 'includes/class-fkhs-helpers.php';
+require_once FKHS_DIR . 'includes/class-fkhs-editor.php';
 require_once FKHS_DIR . 'includes/class-fkhs-progress.php';
 require_once FKHS_DIR . 'includes/class-fkhs-privacy.php';
 require_once FKHS_DIR . 'includes/class-fkhs-lifecycle-cli.php';
@@ -97,6 +98,7 @@ add_action(
 	'plugins_loaded',
 	static function () {
 		FKHS_Plugin::init();
+		FKHS_Editor::init();
 		FKHS_REST::init();
 		FKHS_Privacy::init();
 		FKHS_Sensei::init();

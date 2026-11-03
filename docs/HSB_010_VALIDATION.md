@@ -73,7 +73,7 @@ This fixture proves a MariaDB backup/restore and file-cycle path. It does not ce
 
 Local WordPress 7.1.4/PHP 8.2.32, Sensei 4.26.4, H5P 1.17.10 and MariaDB 10.11.18 passed all 27 package assertions, native authenticated ZIP upload/file comparison, 809 other integration assertions (including four new same-mtime script-cache checks), concurrent-delivery verification and the report/progress benchmark. The fixture services and database volume were removed on exit.
 
-The 477 PHP assertions, 25 Node tests, seven Python packaging tests, gettext checks, shell/PHP syntax and actionlint workflow validation passed locally. Remote evidence must refer to the new pushed revision; HSB-009's prior [seven-job pass](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41674594761) covers `a64a6cd`, not these package changes.
+The 477 PHP assertions, 25 Node tests, seven Python packaging tests, gettext checks, shell/PHP syntax and actionlint workflow validation passed locally. All eight GitHub jobs passed for `39d889e`: [HSB-010 package and integration run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41678542350).
 
 ## Release automation and remaining gate
 
