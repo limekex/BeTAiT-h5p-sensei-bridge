@@ -120,11 +120,12 @@ class FKHS_Plugin {
 		// Start conservatively until authenticated status supplies the gate state.
 		$require = ! empty( FKHS_Sensei::get_h5p_ids_for_lesson( $lesson_id ) );
 
-		// Version the asset with filemtime when possible (cache-busting in dev).
+		// Packaged ZIPs normalize timestamps; content must drive cache invalidation.
 		$script_rel_path = 'assets/js/h5p-sensei-bridge.js';
 		$script_path     = FKHS_DIR . $script_rel_path;
 		$script_url      = FKHS_URL . $script_rel_path;
-		$asset_ver       = file_exists( $script_path ) ? (string) filemtime( $script_path ) : FKHS_VER;
+		$asset_hash      = is_readable( $script_path ) ? hash_file( 'sha256', $script_path ) : false;
+		$asset_ver       = $asset_hash ? FKHS_VER . '-' . substr( $asset_hash, 0, 12 ) : FKHS_VER;
 
 		// Register + enqueue the script.
 		wp_register_script(

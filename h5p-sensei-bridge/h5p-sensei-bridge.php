@@ -3,9 +3,11 @@
  * Plugin Name:       BeTAiT H5P → Sensei Bridge
  * Description:       Captures H5P xAPI results for logged-in users and enforces "pass to complete" in Sensei LMS. Stores attempts and provides an admin report (MVP).
  * Author:            BeTAiT / Bjørn-Tore
- * Version:           0.1.0
- * Requires at least: 6.0
- * Requires PHP:      8.0
+ * Version:           1.2.0-dev
+ * Requires at least: 6.9
+ * Requires PHP:      8.2
+ * Requires Plugins:  sensei-lms, h5p
+ * Update URI:        https://github.com/limekex/BeTAiT-h5p-sensei-bridge
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       h5p-sensei-bridge
@@ -25,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Note: Keep these stable — other files rely on them.
  */
-define( 'FKHS_VER', '0.1.0' );                       // Plugin version.
+define( 'FKHS_VER', '1.2.0-dev' );                   // Unreleased candidate; independent of DB schema.
 define( 'FKHS_FILE', __FILE__ );                     // Absolute path to this file.
 define( 'FKHS_DIR', plugin_dir_path( __FILE__ ) );   // Plugin directory path (with trailing slash).
 define( 'FKHS_URL', plugin_dir_url( __FILE__ ) );    // Plugin URL (with trailing slash).

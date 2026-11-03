@@ -112,3 +112,5 @@ Local automated checks use disposable WordPress 7.1.4/PHP 8.2.32, Sensei 4.26.4,
 The runner includes privacy/lifecycle tests in all three CI profiles. GitHub evidence must refer to the new pushed revision; the prior [HSB-008 seven-job pass](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41670061205) covers `b1cb4d2`, not these changes.
 
 Remaining site decisions/validation: actual retention duration, when to enable raw opt-out/erasure, deleted/changed-email identities, coordination with Sensei/H5P/backups/external systems, large-history export beyond WordPress's aggregate memory budget, concurrent writes and multisite. No broader legal-compliance or complete external-store erasure claim is made.
+
+HSB-009 was committed as `a64a6cd`; all seven jobs in [its GitHub run](https://github.com/limekex/BeTAiT-h5p-sensei-bridge/actions/runs/41674594761) passed. HSB-010 subsequently adds [actual pinned-package rollback and database backup/restore evidence](HSB_010_VALIDATION.md), including the historical code’s schema-marker and receipt limitations.

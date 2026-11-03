@@ -32,16 +32,18 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 - The integration matrix targets WordPress 6.9/PHP 8.2 and WordPress 7.1.4/PHP 8.2 or 8.4, with Sensei LMS 4.26.4 and H5P 1.17.10.
 - Dependency-free PHP checks cover 8.0, 8.2, 8.4 and 8.5.
-- The plugin header still declares WordPress 6.0/PHP 8.0; full integration at those minima and the former Sensei 4.0+ claim are unverified. The tested Sensei version itself requires WordPress 6.9. See [HSB-006 results and scope](docs/HSB_006_VALIDATION.md) before choosing a deployment combination.
+- The candidate header requires WordPress 6.9/PHP 8.2, matching the lowest full integration profile, and declares `sensei-lms` and `h5p` dependencies. PHP 8.0 regression coverage is retained but is not an installation support claim. See [HSB-006 results](docs/HSB_006_VALIDATION.md) and [HSB-010 package evidence](docs/HSB_010_VALIDATION.md); versions between sampled combinations are not automatically certified.
 
 ---
 
 ## Installation
 
-1. Clone the repository into a development checkout.
-2. Copy or symlink its nested `h5p-sensei-bridge/` directory to `wp-content/plugins/h5p-sensei-bridge`. There is no Composer install step at present.
-3. Activate **H5P Sensei Bridge** in WP Admin → Plugins.
-4. Ensure your H5P and Sensei plugins are active.
+1. Install and activate the supported Sensei LMS and H5P versions.
+2. Build the candidate with `python3 scripts/build-plugin.py`. The output is `dist/h5p-sensei-bridge-1.2.0-dev.zip`, with a SHA-256 sidecar and file manifest.
+3. On an isolated test site, upload the ZIP through Plugins → Add New → Upload Plugin and activate **BeTAiT H5P → Sensei Bridge**. The archive contains one `h5p-sensei-bridge/` root.
+4. Follow the [upgrade, backup/restore and rollback procedure](docs/HSB_010_VALIDATION.md) before any production installation. `1.2.0-dev` is an unreleased candidate, not a deployment approval.
+
+For source development, copy or symlink the nested `h5p-sensei-bridge/` directory into `wp-content/plugins/`. No Composer or Node build is needed at runtime. The integration suite installs the real ZIP rather than mounting source code as the installed plugin.
 
 ---
 
@@ -239,7 +241,7 @@ add_filter('fkhs_threshold_for_lesson', function($thr, $lesson_id, $user_id){
 
 ## License
 
-License metadata needs maintainer resolution: this README previously declared MIT, while the plugin header declares GPLv2 or later, and no LICENSE file is present at the reviewed baseline. See HSB-010 in the [engineering plan](docs/ENGINEERING_PLAN.md).
+GPLv2 or later (`GPL-2.0-or-later`), confirmed by the maintainer on 2026-11-03. See the included [license text](h5p-sensei-bridge/LICENSE). This resolves the former README/header mismatch. No payment or premium functionality is introduced by this choice.
 
 ---
 

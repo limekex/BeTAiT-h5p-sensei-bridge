@@ -23,3 +23,4 @@ wp-content/plugins/*/vendor/
 dist/
 build/
 artifacts/
+__pycache__/

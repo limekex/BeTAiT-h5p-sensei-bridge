@@ -57,3 +57,7 @@ Updated 2026-11-03 after the owner resolved billing: the [HSB-006 GitHub run](ht
 The plugin header still declares WordPress 6.0/PHP 8.0, and older documentation claimed Sensei 4.0+. Full integration at those historical minima is **not verified**. In particular, the current Sensei package cannot establish WordPress 6.0 support, and the repository-based progress fallback depends on newer Sensei APIs. Header/release support claims must be reconciled in HSB-010 or backed by additional fixtures before release. No plugin version or minimum metadata is changed here.
 
 PHP 8.0 and 8.5 only have dependency-free checks in this matrix. The earlier PHP 8.5 local FagKlar browser test is separate evidence, not a full MariaDB compatibility run. PHP 8.1/8.3, older Sensei/H5P versions, MySQL, different operating systems/architectures, third-party/Pro integration and broader browser/library/accessibility combinations remain outside this matrix. This work does not alter existing attempts or the authorized local staging site.
+
+## HSB-010 follow-up
+
+The unreleased `1.2.0-dev` candidate now declares WordPress 6.9/PHP 8.2 to match the lowest full integration profile. PHP 8.0 checks remain regression-only. CI adds an eighth package job, and the three integration profiles install real ZIPs, exercise native admin upload and run historical package/SQL recovery tests rather than mounting plugin source. See [HSB-010](HSB_010_VALIDATION.md); the earlier metadata and counts above remain historical HSB-006 evidence.

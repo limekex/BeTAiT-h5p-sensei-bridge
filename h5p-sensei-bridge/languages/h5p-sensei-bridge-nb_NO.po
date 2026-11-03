@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: BeTAiT H5P → Sensei Bridge 0.1.0\n"
+"Project-Id-Version: BeTAiT H5P → Sensei Bridge 1.2.0-dev\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/h5p-sensei-"
 "bridge\n"
 "POT-Creation-Date: 2026-11-03T16:21:53+00:00\n"

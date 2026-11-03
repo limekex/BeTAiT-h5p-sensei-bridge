@@ -62,7 +62,8 @@ class FKHS_Reporter {
 			$rel  = 'assets/js/h5p-sensei-admin-report.js';
 			$path = FKHS_DIR . $rel;
 			$url  = FKHS_URL . $rel;
-			$ver  = file_exists( $path ) ? (string) filemtime( $path ) : FKHS_VER;
+			$hash = is_readable( $path ) ? hash_file( 'sha256', $path ) : false;
+			$ver  = $hash ? FKHS_VER . '-' . substr( $hash, 0, 12 ) : FKHS_VER;
 
 			// 1) Registrer skriptet først (med wp-i18n som dependency)
 			wp_register_script(

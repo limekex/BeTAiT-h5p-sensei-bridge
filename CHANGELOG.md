@@ -1,16 +1,30 @@
-## [Unreleased] — develop reconciliation candidate
+## [Unreleased] — 1.2.0-dev stabilization candidate
 
 ### Fixed
+- Version script URLs by plugin version and content hash so reproducible ZIP timestamps cannot keep obsolete browser scripts cached.
+- Validate learner enrollment, lesson access, H5P membership and consumed xAPI fields on both REST paths.
+- Require actual completion signals; remove synthetic inactivity completion and ambiguous answered/progress inference. Preserve existing completion history.
+- Acknowledge attempts only after storage, deduplicate UUID retries and reject changed payloads under the same receipt. Preserve queued retries and reject stale status responses.
+- Guard native Sensei lesson/quiz submissions and correct programmatic completion while preserving answers and grades.
 - Reuse stable gate listeners and restore original control state after unlock/bypass.
 - Use shared per-activity progress reads in REST and Sensei guards, including deterministic latest/best ordering.
 - Apply effective threshold filters consistently once and retain legacy metadata on editor save.
 - Display inherited thresholds in the editor instead of silently showing zero.
 
 ### Added
+- Scoped, full-history report search/sort/pagination; metadata batching and measured query plans.
+- WordPress personal-data exports, explicit opt-in erasure and administrator raw-statement cleanup with a read-only default.
+- Keyboard/focus handling, responsive feedback and Bokmål translations.
+- Deterministic installable ZIP, manifest/checksum, native upload and historical-package upgrade/rollback/backup-restore tests; tag builds require checks and create drafts only.
+- GPLv2-or-later license text, as confirmed by the maintainer.
 - Canonical REST gate/item flags, PHP/Node regression fixtures and CI configuration.
 - Develop/main review, updated engineering plan and staging/rollback checklist.
 
-This candidate is not a release or deployment. Server enforcement is intentionally stricter where old editor saves removed the legacy require flag. Read [the staging gate](docs/DEVELOP_REVIEW.md) before merging or deploying. Historical version claims below are preserved and still need reconciliation with the plugin header.
+### Changed
+- Identify the unreleased candidate consistently as `1.2.0-dev`; schema remains independently `0.3.0`.
+- Require WordPress 6.9/PHP 8.2 in installation metadata, matching the lowest full integration profile, and declare Sensei LMS/H5P dependencies.
+
+This candidate is not a release or deployment. Server enforcement is intentionally stricter where old editor saves removed the legacy require flag. Read [the staging gate](docs/DEVELOP_REVIEW.md) before deployment. Historical entries below describe past code: the 1.1.0 entry was a changelog claim, while the published v1.0.0 tag contained header 0.1.0. Neither historical identity is rewritten. The old synthetic completion behavior below is removed in this candidate.
 
 ---
 

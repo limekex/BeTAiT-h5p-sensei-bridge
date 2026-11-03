@@ -1,21 +1,41 @@
-name: Build plugin on tag
+name: Validate and draft release on tag
 on:
   push:
     tags:
       - 'v*'
+permissions:
+  contents: read
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  checks:
+    uses: ./.github/workflows/checks.yml
+  draft:
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Prepare zip
+      - uses: actions/download-artifact@v4
+        with:
+          name: plugin-package
+          path: artifacts/tested-package
+      - name: Verify release identity and build
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          mkdir dist
-          zip -r "dist/betait-spfy-${GITHUB_REF_NAME}.zip" \
-            . -x ".git/*" ".github/*" "node_modules/*" ".DS_Store"
-      - name: Upload artifact to Release
+          package=$(python3 scripts/build-plugin.py --tag "$RELEASE_TAG")
+          cmp "$package" "artifacts/tested-package/$(basename "$package")"
+      - name: Prepare draft for maintainer review
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.zip
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          files: |
+            dist/*.zip
+            dist/*.sha256
+            dist/*.manifest.json

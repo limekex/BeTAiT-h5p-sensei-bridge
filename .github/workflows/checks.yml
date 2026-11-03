@@ -4,9 +4,26 @@ on:
   push:
     branches: [main, develop, 'review/**', 'fix/**', 'feature/**']
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 jobs:
+  package:
+    name: Installable package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify packaging boundaries and metadata
+        run: python3 tests/package_test.py
+      - name: Build candidate
+        run: python3 scripts/build-plugin.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-package
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
   regression:
     name: PHP ${{ matrix.php }} regression
     runs-on: ubuntu-24.04
@@ -44,6 +61,8 @@ jobs:
         profile: [wp69-php82, wp71-php82, wp71-php84]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: WordPress, Sensei, H5P and MariaDB integration
         env:
           FKHS_TEST_PROFILE: ${{ matrix.profile }}

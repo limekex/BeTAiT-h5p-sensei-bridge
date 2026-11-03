@@ -26,7 +26,6 @@ services:
       WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
     volumes:
       - site:/var/www/html
-      - ../../h5p-sensei-bridge:/var/www/html/wp-content/plugins/h5p-sensei-bridge:ro
       - ./disable-mail.php:/var/www/html/wp-content/mu-plugins/fkhs-fixture.php:ro
   cli:
     image: ${FKHS_CLI_IMAGE:-wordpress:cli-2.12.0-php8.2}
@@ -35,7 +34,7 @@ services:
     environment: *wp_environment
     volumes:
       - site:/var/www/html
-      - ../../h5p-sensei-bridge:/var/www/html/wp-content/plugins/h5p-sensei-bridge:ro
+      - ${FKHS_PACKAGE_DIR:?Build package before starting integration}:/packages:ro
       - ./disable-mail.php:/var/www/html/wp-content/mu-plugins/fkhs-fixture.php:ro
       - ..:/tests:ro
 volumes:

@@ -12,6 +12,11 @@ export FKHS_WP_IMAGE="wordpress:7.0.0-php${php_version}-apache"
 export FKHS_CLI_IMAGE="wordpress:cli-2.12.0-php${php_version}"
 artifacts="$PWD/artifacts/integration/$profile"
 mkdir -p "$artifacts"
+export FKHS_PACKAGE_DIR="$artifacts/packages"
+mkdir -p "$FKHS_PACKAGE_DIR"
+candidate_path=$(python3 scripts/build-plugin.py --output "$FKHS_PACKAGE_DIR")
+candidate="/packages/$(basename "$candidate_path")"
+python3 tests/integration/build-baseline.py "$FKHS_PACKAGE_DIR"
 # A distinct project per invocation; cleanup can only remove this run's fixtures.
 project="fkhs-$profile-$$"
 compose=(docker compose -p "$project" -f tests/integration/compose.yml)
@@ -42,7 +47,28 @@ wp core verify-checksums --version="$wp_version" --exclude=wp-config-docker.php
 wp core install --url=http://wordpress --title='HSB integration fixture' --admin_user=fixture-admin --admin_password=fixture-admin-only --admin_email=fixture@example.test --skip-email
 wp plugin install sensei-lms --version=4.26.4 --activate
 wp plugin install h5p --version=1.17.10 --activate
+wp eval-file /tests/wordpress-package-upload.php "$candidate"
 wp plugin activate h5p-sensei-bridge
+wp eval-file /tests/wordpress-package.php fresh
+wp plugin uninstall h5p-sensei-bridge --deactivate
+wp plugin install /packages/historical-develop-test-only.zip --activate
+wp eval-file /tests/wordpress-package.php legacy
+wp plugin deactivate h5p-sensei-bridge
+wp plugin install "$candidate" --force --activate
+wp eval-file /tests/wordpress-package.php upgrade
+# Actual SQL backup of this disposable fixture only; never a mounted user database.
+"${compose[@]}" exec -T db mariadb-dump -uwordpress -pfixture-only --no-tablespaces wordpress > "$artifacts/package-backup.sql"
+wp plugin deactivate h5p-sensei-bridge
+wp plugin install /packages/historical-develop-test-only.zip --force --activate
+wp eval-file /tests/wordpress-package.php rollback
+wp plugin deactivate h5p-sensei-bridge
+wp plugin install "$candidate" --force --activate
+wp eval-file /tests/wordpress-package.php reupgrade
+wp eval-file /tests/wordpress-package.php mutate
+"${compose[@]}" exec -T db mariadb -uwordpress -pfixture-only wordpress < "$artifacts/package-backup.sql"
+wp cache flush
+wp eval-file /tests/wordpress-package.php restore
+rm "$artifacts/package-backup.sql"
 # CLI activation may flush before Sensei's post types are registered. Rebuild in
 # a fresh process so quiz/lesson URLs work on every selected WordPress version.
 wp rewrite flush
