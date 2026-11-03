@@ -1,6 +1,7 @@
 ## [Unreleased] — 1.2.0-dev stabilization candidate
 
 ### Added
+- Add the learner’s own course H5P overview as a template/course layout block and `[fkhs_course_progress]`, with a private read API, canonical per-lesson requirements and bounded batch reads (HSB-012).
 - Skip frontend tracking assets in lessons without H5P, preventing the legacy footer from showing an empty status panel beside a hidden template progress block.
 - Make H5P progress available in template/template-part editing with width and spacing controls; render directly on the server and hide the block/shortcode when the current page is not a lesson with H5P activities.
 - Add lesson-scoped H5P progress block/shortcode sharing the existing save queue and canonical status. Publish the existing read API schema and test native Application Password access isolation (HSB-011).

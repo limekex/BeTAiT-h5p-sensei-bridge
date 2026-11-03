@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T21:25:49+00:00\n"
+"POT-Creation-Date: 2026-11-03T22:30:13+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: h5p-sensei-bridge\n"
@@ -27,6 +27,70 @@ msgstr ""
 #. Author of the plugin
 #: h5p-sensei-bridge.php
 msgid "BeTAiT / Bjørn-Tore"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:167
+#: includes/class-fkhs-course-progress.php:191
+msgid "Your H5P progress in this course"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:168
+msgid "Checking course progress…"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:169
+msgid "Refresh progress"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:170
+msgid "Course progress could not be loaded. Try again, or open a lesson to check its progress."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:171
+msgid "Sign in with access to this course, then reload this page to view your progress."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:172
+#: includes/class-fkhs-plugin.php:180
+msgid "Sign in in a new tab"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:173
+#: includes/class-fkhs-plugin.php:161
+#, php-format
+msgid "%1$d of %2$d H5P requirements met"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:174
+#, php-format
+msgid "Optional activities: %d"
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:175
+#: includes/class-fkhs-plugin.php:164
+msgid "No H5P activities currently block progression."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:176
+msgid "Only lessons you can currently access are included. More H5P requirements may appear as lessons become available."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:177
+msgid "This overview shows H5P requirements. Sensei tracks lesson and course completion separately."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:178
+#: includes/class-fkhs-plugin.php:172
+msgid "Optional activities must be completed once you have started an attempt."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:192
+msgid "Sign in with access to this course to view your H5P progress."
+msgstr ""
+
+#: includes/class-fkhs-course-progress.php:193
+#: includes/class-fkhs-progress-view.php:63
+msgid "Enable JavaScript to view your progress."
 msgstr ""
 
 #: includes/class-fkhs-editor.php:44
@@ -62,7 +126,7 @@ msgid "No activities found."
 msgstr ""
 
 #: includes/class-fkhs-editor.php:52
-#: includes/class-fkhs-plugin.php:178
+#: includes/class-fkhs-plugin.php:182
 #: includes/class-fkhs-reporter.php:91
 msgid "Retry"
 msgstr ""
@@ -181,204 +245,187 @@ msgstr ""
 msgid "The lesson was saved, but its thresholds were not changed. Reload and check activity access, numeric values and concurrent edits."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:156
-#: includes/class-fkhs-progress-view.php:59
+#: includes/class-fkhs-plugin.php:160
+#: includes/class-fkhs-progress-view.php:61
 msgid "Your H5P progress"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:157
-#, php-format
-msgid "%1$d of %2$d H5P requirements met"
-msgstr ""
-
-#: includes/class-fkhs-plugin.php:158
+#: includes/class-fkhs-plugin.php:162
 msgid "All H5P requirements are met."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:159
+#: includes/class-fkhs-plugin.php:163
 msgid "This lesson has no H5P activities."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:160
-msgid "No H5P activities currently block progression."
-msgstr ""
-
-#: includes/class-fkhs-plugin.php:161
+#: includes/class-fkhs-plugin.php:165
 msgid "Optional"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:162
+#: includes/class-fkhs-plugin.php:166
 msgid "Not started"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:163
+#: includes/class-fkhs-plugin.php:167
 #, php-format
 msgid "Required score: %s"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:164
+#: includes/class-fkhs-plugin.php:168
 msgid "Requires completion"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:165
+#: includes/class-fkhs-plugin.php:169
 #, php-format
 msgid "Best score: %s"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:166
+#: includes/class-fkhs-plugin.php:170
 #: includes/class-fkhs-reporter.php:113
 #: includes/class-fkhs-reporter.php:158
 msgid "Completed"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:167
+#: includes/class-fkhs-plugin.php:171
 #, php-format
 msgid "Activity #%d"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:168
-msgid "Optional activities must be completed once you have started an attempt."
-msgstr ""
-
-#: includes/class-fkhs-plugin.php:169
+#: includes/class-fkhs-plugin.php:173
 msgid "Saving your activity… Keep this page open."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:170
+#: includes/class-fkhs-plugin.php:174
 msgid "Your activity is saved."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:171
+#: includes/class-fkhs-plugin.php:175
 msgid "Your activity has not been confirmed saved. Keep this page open and retry."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:172
+#: includes/class-fkhs-plugin.php:176
 msgid "Saving could not be confirmed. Reload the page to check progress before repeating the activity."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:173
+#: includes/class-fkhs-plugin.php:177
 msgid "Progress could not be checked. Retry before continuing."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:174
+#: includes/class-fkhs-plugin.php:178
 msgid "Checking progress…"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:175
+#: includes/class-fkhs-plugin.php:179
 msgid "Your session or access has expired. Sign in, then reload this page and repeat any unsaved activity."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:176
-msgid "Sign in in a new tab"
-msgstr ""
-
-#: includes/class-fkhs-plugin.php:177
+#: includes/class-fkhs-plugin.php:181
 msgid "An activity event could not be recorded. Reload the page and repeat the activity."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:179
+#: includes/class-fkhs-plugin.php:183
 msgid "Waiting for H5P tracking to start…"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:180
+#: includes/class-fkhs-plugin.php:184
 msgid "H5P tracking could not start. Retry, or reload this page before repeating the activity."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:181
+#: includes/class-fkhs-plugin.php:185
 msgid "Retry H5P tracking"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:183
+#: includes/class-fkhs-plugin.php:187
 msgid "Complete the H5P first"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:184
+#: includes/class-fkhs-plugin.php:188
 msgid "You need to pass the in-lesson tasks before you can take the quiz."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:185
+#: includes/class-fkhs-plugin.php:189
 msgid "You need to pass the in-lesson tasks before you can complete the lesson."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:189
+#: includes/class-fkhs-plugin.php:193
 #, php-format
 msgid "This task is passed: %1$s / %2$s points (accepted)."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:190
+#: includes/class-fkhs-plugin.php:194
 #, php-format
 msgid "Not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:191
+#: includes/class-fkhs-plugin.php:195
 msgid "This task is completed."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:192
+#: includes/class-fkhs-plugin.php:196
 msgid "Not completed yet. Click to view."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:193
+#: includes/class-fkhs-plugin.php:197
 msgid "Practice again"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:194
+#: includes/class-fkhs-plugin.php:198
 msgid "Retry now"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:195
+#: includes/class-fkhs-plugin.php:199
 #: includes/class-fkhs-reporter.php:93
 msgid "Close"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:198
+#: includes/class-fkhs-plugin.php:202
 msgid "Lesson tasks status"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:199
+#: includes/class-fkhs-plugin.php:203
 msgid "All required tasks are satisfied. You can continue."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:201
+#: includes/class-fkhs-plugin.php:205
 #, php-format
 msgid "%1$d of %2$d tasks passed"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:202
+#: includes/class-fkhs-plugin.php:206
 msgid "Remaining:"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:204
+#: includes/class-fkhs-plugin.php:208
 #, php-format
 msgid "%1$s — best %2$s, required %3$s"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:206
+#: includes/class-fkhs-plugin.php:210
 #, php-format
 msgid "%1$s — not completed yet"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:209
+#: includes/class-fkhs-plugin.php:213
 msgid "No mandatory H5P tasks yet."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:210
+#: includes/class-fkhs-plugin.php:214
 msgid "Optional interactive content is available."
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:213
+#: includes/class-fkhs-plugin.php:217
 msgid "Task passed"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:214
+#: includes/class-fkhs-plugin.php:218
 msgid "Not passed yet"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:215
+#: includes/class-fkhs-plugin.php:219
 msgid "Not completed yet"
 msgstr ""
 
-#: includes/class-fkhs-plugin.php:218
+#: includes/class-fkhs-plugin.php:222
 msgid "View task"
 msgstr ""
 
@@ -477,19 +524,23 @@ msgid "Use a valid cutoff date, nonnegative cursor IDs and a batch size of 1–2
 msgstr ""
 
 #: includes/class-fkhs-progress-view.php:30
-msgid "H5P progress"
+msgid "H5P course progress"
 msgstr ""
 
 #: includes/class-fkhs-progress-view.php:31
+msgid "Shows the learner’s H5P requirements across accessible lessons in the current course. Hidden outside courses and in courses without H5P."
+msgstr ""
+
+#: includes/class-fkhs-progress-view.php:32
+msgid "H5P progress"
+msgstr ""
+
+#: includes/class-fkhs-progress-view.php:33
 msgid "Shows the learner’s H5P progress in the current lesson. Hidden automatically in lessons without H5P activities and on other pages."
 msgstr ""
 
-#: includes/class-fkhs-progress-view.php:60
+#: includes/class-fkhs-progress-view.php:62
 msgid "Progress loads when you view this lesson while signed in."
-msgstr ""
-
-#: includes/class-fkhs-progress-view.php:61
-msgid "Enable JavaScript to view your progress."
 msgstr ""
 
 #: includes/class-fkhs-report-query.php:16

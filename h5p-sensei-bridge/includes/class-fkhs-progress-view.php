@@ -27,6 +27,8 @@ class FKHS_Progress_View {
         wp_enqueue_script( 'fkhs-progress-editor', FKHS_URL . $path, array( 'wp-blocks', 'wp-block-editor', 'wp-element', 'wp-i18n' ), FKHS_VER . '-' . substr( hash_file( 'sha256', FKHS_DIR . $path ), 0, 12 ), true );
         wp_set_script_translations( 'fkhs-progress-editor', 'h5p-sensei-bridge', FKHS_DIR . 'languages' );
         wp_localize_script( 'fkhs-progress-editor', 'fkhsProgressBlock', array(
+            'courseTitle' => __( 'H5P course progress', 'h5p-sensei-bridge' ),
+            'courseDescription' => __( 'Shows the learner’s H5P requirements across accessible lessons in the current course. Hidden outside courses and in courses without H5P.', 'h5p-sensei-bridge' ),
             'title' => __( 'H5P progress', 'h5p-sensei-bridge' ),
             'description' => __( 'Shows the learner’s H5P progress in the current lesson. Hidden automatically in lessons without H5P activities and on other pages.', 'h5p-sensei-bridge' ),
         ) );

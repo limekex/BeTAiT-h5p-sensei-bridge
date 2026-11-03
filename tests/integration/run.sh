@@ -94,6 +94,7 @@ wp eval-file /tests/wordpress-report.php
 wp eval-file /tests/wordpress-privacy.php
 wp eval-file /tests/wordpress-editor.php
 wp eval-file /tests/wordpress-progress-view.php
+wp eval-file /tests/wordpress-course-progress.php
 # One representative profile records the bounded synthetic performance matrix.
 if [ "$profile" = wp71-php82 ]; then
   wp eval-file /tests/wordpress-report-benchmark.php | tee "$artifacts/report-benchmark.log"

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: BeTAiT H5P → Sensei Bridge 1.2.0-dev\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/h5p-sensei-"
 "bridge\n"
-"POT-Creation-Date: 2026-11-03T21:25:49+00:00\n"
+"POT-Creation-Date: 2026-11-03T22:30:13+00:00\n"
 "PO-Revision-Date: 2026-11-03 16:30+0100\n"
 "Last-Translator: BeTAiT\n"
 "Language-Team: Norsk bokmål\n"
@@ -36,6 +36,86 @@ msgstr ""
 #: h5p-sensei-bridge.php
 msgid "BeTAiT / Bjørn-Tore"
 msgstr "BeTAiT / Bjørn-Tore"
+
+#: includes/class-fkhs-course-progress.php:167
+#: includes/class-fkhs-course-progress.php:191
+msgid "Your H5P progress in this course"
+msgstr "Din H5P-progresjon i kurset"
+
+#: includes/class-fkhs-course-progress.php:168
+msgid "Checking course progress…"
+msgstr "Henter kursprogresjon…"
+
+#: includes/class-fkhs-course-progress.php:169
+msgid "Refresh progress"
+msgstr "Oppdater progresjon"
+
+#: includes/class-fkhs-course-progress.php:170
+msgid ""
+"Course progress could not be loaded. Try again, or open a lesson to check "
+"its progress."
+msgstr ""
+"Kunne ikke hente kursprogresjonen. Prøv igjen, eller åpne en leksjon for å "
+"se progresjonen der."
+
+#: includes/class-fkhs-course-progress.php:171
+msgid ""
+"Sign in with access to this course, then reload this page to view your "
+"progress."
+msgstr ""
+"Logg inn med tilgang til kurset, og last siden på nytt for å se progresjonen "
+"din."
+
+#: includes/class-fkhs-course-progress.php:172
+#: includes/class-fkhs-plugin.php:180
+msgid "Sign in in a new tab"
+msgstr "Logg inn i en ny fane"
+
+#: includes/class-fkhs-course-progress.php:173
+#: includes/class-fkhs-plugin.php:161
+#, php-format
+msgid "%1$d of %2$d H5P requirements met"
+msgstr "%1$d av %2$d H5P-krav oppfylt"
+
+#: includes/class-fkhs-course-progress.php:174
+#, php-format
+msgid "Optional activities: %d"
+msgstr "Valgfrie aktiviteter: %d"
+
+#: includes/class-fkhs-course-progress.php:175
+#: includes/class-fkhs-plugin.php:164
+msgid "No H5P activities currently block progression."
+msgstr "Ingen H5P-aktiviteter hindrer deg i å gå videre nå."
+
+#: includes/class-fkhs-course-progress.php:176
+msgid ""
+"Only lessons you can currently access are included. More H5P requirements "
+"may appear as lessons become available."
+msgstr ""
+"Bare leksjoner du har tilgang til nå, er med i oversikten. Flere H5P-krav "
+"kan komme til når nye leksjoner blir tilgjengelige."
+
+#: includes/class-fkhs-course-progress.php:177
+msgid ""
+"This overview shows H5P requirements. Sensei tracks lesson and course "
+"completion separately."
+msgstr ""
+"Oversikten viser H5P-krav. Sensei registrerer fullføring av leksjoner og "
+"kurs separat."
+
+#: includes/class-fkhs-course-progress.php:178
+#: includes/class-fkhs-plugin.php:172
+msgid "Optional activities must be completed once you have started an attempt."
+msgstr "Valgfrie aktiviteter må fullføres når du har startet et forsøk."
+
+#: includes/class-fkhs-course-progress.php:192
+msgid "Sign in with access to this course to view your H5P progress."
+msgstr "Logg inn med tilgang til kurset for å se H5P-progresjonen din."
+
+#: includes/class-fkhs-course-progress.php:193
+#: includes/class-fkhs-progress-view.php:63
+msgid "Enable JavaScript to view your progress."
+msgstr "Aktiver JavaScript for å se progresjonen din."
 
 #: includes/class-fkhs-editor.php:44
 msgid "H5P activity"
@@ -69,7 +149,7 @@ msgstr "Laster aktiviteter…"
 msgid "No activities found."
 msgstr "Fant ingen aktiviteter."
 
-#: includes/class-fkhs-editor.php:52 includes/class-fkhs-plugin.php:178
+#: includes/class-fkhs-editor.php:52 includes/class-fkhs-plugin.php:182
 #: includes/class-fkhs-reporter.php:91
 msgid "Retry"
 msgstr "Prøv igjen"
@@ -96,13 +176,16 @@ msgstr "Sett inn en aktivitet eller en H5P-kortkode for å angi terskelen."
 
 #: includes/class-fkhs-editor.php:58
 msgid "Repeated uses of an activity share one threshold in this lesson."
-msgstr "Alle forekomster av samme aktivitet deler én terskel i denne leksjonen."
+msgstr ""
+"Alle forekomster av samme aktivitet deler én terskel i denne leksjonen."
 
 #: includes/class-fkhs-editor.php:59
 msgid ""
 "A threshold of 0 is optional before an attempt, then requires an actual "
 "completion signal."
-msgstr "Terskel 0 er valgfri før første forsøk, og krever deretter et faktisk fullføringssignal."
+msgstr ""
+"Terskel 0 er valgfri før første forsøk, og krever deretter et faktisk "
+"fullføringssignal."
 
 #: includes/class-fkhs-editor.php:60
 msgid "Inherited value"
@@ -120,7 +203,9 @@ msgstr "Filtre kan gi elevene en annen effektiv terskel."
 msgid ""
 "Activity unavailable or you do not have access. Existing content is "
 "preserved."
-msgstr "Aktiviteten er utilgjengelig, eller du mangler tilgang. Eksisterende innhold beholdes."
+msgstr ""
+"Aktiviteten er utilgjengelig, eller du mangler tilgang. Eksisterende innhold "
+"beholdes."
 
 #: includes/class-fkhs-editor.php:64
 msgid "Enter a number from 0 to 100."
@@ -132,7 +217,9 @@ msgstr "Denne blokken er bare tilgjengelig i Sensei-leksjoner."
 
 #: includes/class-fkhs-editor.php:66 includes/class-fkhs-metabox.php:37
 msgid "Inherit uses the legacy activity value, then the lesson value, then 70."
-msgstr "Arv bruker først aktivitetens eldre innstilling, deretter leksjonens verdi og til slutt 70."
+msgstr ""
+"Arv bruker først aktivitetens eldre innstilling, deretter leksjonens verdi "
+"og til slutt 70."
 
 #: includes/class-fkhs-editor.php:67
 msgid "Selected activity"
@@ -158,7 +245,9 @@ msgstr "Kunne ikke hente aktiviteter. Prøv igjen."
 msgid ""
 "Thresholds must be 0–100 and belong to available activities in this lesson. "
 "Reload if the lesson changed."
-msgstr "Tersklene må være 0–100 og tilhøre tilgjengelige aktiviteter i leksjonen. Last inn på nytt hvis leksjonen er endret."
+msgstr ""
+"Tersklene må være 0–100 og tilhøre tilgjengelige aktiviteter i leksjonen. "
+"Last inn på nytt hvis leksjonen er endret."
 
 #: includes/class-fkhs-editor.php:171
 msgid "Could not save activity thresholds. Try saving the lesson again."
@@ -166,7 +255,9 @@ msgstr "Kunne ikke lagre aktivitetstersklene. Prøv å lagre leksjonen på nytt.
 
 #: includes/class-fkhs-editor.php:204
 msgid "Detach the synced pattern before using H5P activity blocks in a lesson."
-msgstr "Koble fra det synkroniserte mønsteret før du bruker H5P-aktivitetsblokker i en leksjon."
+msgstr ""
+"Koble fra det synkroniserte mønsteret før du bruker H5P-aktivitetsblokker i "
+"en leksjon."
 
 #: includes/class-fkhs-metabox.php:11
 msgid "H5P → Sensei Bridge"
@@ -180,7 +271,9 @@ msgstr "Laster aktivitetsterskler…"
 msgid ""
 "Leave blank to inherit. A threshold of 0 is optional before an attempt, then "
 "requires an actual completion signal."
-msgstr "La feltet stå tomt for å arve. Terskel 0 er valgfri før første forsøk, og krever deretter et faktisk fullføringssignal."
+msgstr ""
+"La feltet stå tomt for å arve. Terskel 0 er valgfri før første forsøk, og "
+"krever deretter et faktisk fullføringssignal."
 
 #: includes/class-fkhs-metabox.php:24
 msgid "No H5P items detected in this lesson yet."
@@ -195,81 +288,70 @@ msgstr "H5P #%d – terskel (%%)"
 msgid ""
 "The lesson was saved, but its thresholds were not changed. Reload and check "
 "activity access, numeric values and concurrent edits."
-msgstr "Leksjonen er lagret, men tersklene er ikke endret. Last inn på nytt og kontroller aktivitetstilgang, tallverdier og samtidige endringer."
+msgstr ""
+"Leksjonen er lagret, men tersklene er ikke endret. Last inn på nytt og "
+"kontroller aktivitetstilgang, tallverdier og samtidige endringer."
 
-#: includes/class-fkhs-plugin.php:156 includes/class-fkhs-progress-view.php:59
+#: includes/class-fkhs-plugin.php:160 includes/class-fkhs-progress-view.php:61
 msgid "Your H5P progress"
 msgstr "Din H5P-progresjon"
 
-#: includes/class-fkhs-plugin.php:157
-#, php-format
-msgid "%1$d of %2$d H5P requirements met"
-msgstr "%1$d av %2$d H5P-krav oppfylt"
-
-#: includes/class-fkhs-plugin.php:158
+#: includes/class-fkhs-plugin.php:162
 msgid "All H5P requirements are met."
 msgstr "Alle H5P-krav er oppfylt."
 
-#: includes/class-fkhs-plugin.php:159
+#: includes/class-fkhs-plugin.php:163
 msgid "This lesson has no H5P activities."
 msgstr "Denne leksjonen har ingen H5P-aktiviteter."
 
-#: includes/class-fkhs-plugin.php:160
-msgid "No H5P activities currently block progression."
-msgstr "Ingen H5P-aktiviteter hindrer deg i å gå videre nå."
-
-#: includes/class-fkhs-plugin.php:161
+#: includes/class-fkhs-plugin.php:165
 msgid "Optional"
 msgstr "Valgfri"
 
-#: includes/class-fkhs-plugin.php:162
+#: includes/class-fkhs-plugin.php:166
 msgid "Not started"
 msgstr "Ikke startet"
 
-#: includes/class-fkhs-plugin.php:163
+#: includes/class-fkhs-plugin.php:167
 #, php-format
 msgid "Required score: %s"
 msgstr "Poengkrav: %s"
 
-#: includes/class-fkhs-plugin.php:164
+#: includes/class-fkhs-plugin.php:168
 msgid "Requires completion"
 msgstr "Må fullføres"
 
-#: includes/class-fkhs-plugin.php:165
+#: includes/class-fkhs-plugin.php:169
 #, php-format
 msgid "Best score: %s"
 msgstr "Beste resultat: %s"
 
-#: includes/class-fkhs-plugin.php:166 includes/class-fkhs-reporter.php:113
+#: includes/class-fkhs-plugin.php:170 includes/class-fkhs-reporter.php:113
 #: includes/class-fkhs-reporter.php:158
 msgid "Completed"
 msgstr "Fullført"
 
-#: includes/class-fkhs-plugin.php:167
+#: includes/class-fkhs-plugin.php:171
 #, php-format
 msgid "Activity #%d"
 msgstr "Aktivitet #%d"
 
-#: includes/class-fkhs-plugin.php:168
-msgid "Optional activities must be completed once you have started an attempt."
-msgstr "Valgfrie aktiviteter må fullføres når du har startet et forsøk."
-
-#: includes/class-fkhs-plugin.php:169
+#: includes/class-fkhs-plugin.php:173
 msgid "Saving your activity… Keep this page open."
 msgstr "Lagrer aktiviteten din … Hold denne siden åpen."
 
-#: includes/class-fkhs-plugin.php:170
+#: includes/class-fkhs-plugin.php:174
 msgid "Your activity is saved."
 msgstr "Aktiviteten din er lagret."
 
-#: includes/class-fkhs-plugin.php:171
+#: includes/class-fkhs-plugin.php:175
 msgid ""
 "Your activity has not been confirmed saved. Keep this page open and retry."
 msgstr ""
 "Lagringen av aktiviteten er ikke bekreftet. Hold denne siden åpen og prøv "
 "igjen."
 
-#: includes/class-fkhs-plugin.php:172
+#: includes/class-fkhs-plugin.php:176
 msgid ""
 "Saving could not be confirmed. Reload the page to check progress before "
 "repeating the activity."
@@ -277,15 +359,15 @@ msgstr ""
 "Lagringen kunne ikke bekreftes. Last siden på nytt for å sjekke fremdriften "
 "før du gjentar aktiviteten."
 
-#: includes/class-fkhs-plugin.php:173
+#: includes/class-fkhs-plugin.php:177
 msgid "Progress could not be checked. Retry before continuing."
 msgstr "Fremdriften kunne ikke kontrolleres. Prøv igjen før du fortsetter."
 
-#: includes/class-fkhs-plugin.php:174
+#: includes/class-fkhs-plugin.php:178
 msgid "Checking progress…"
 msgstr "Kontrollerer fremdriften …"
 
-#: includes/class-fkhs-plugin.php:175
+#: includes/class-fkhs-plugin.php:179
 msgid ""
 "Your session or access has expired. Sign in, then reload this page and "
 "repeat any unsaved activity."
@@ -293,11 +375,7 @@ msgstr ""
 "Økten eller tilgangen din har utløpt. Logg inn, last siden på nytt og gjenta "
 "aktiviteter som ikke er lagret."
 
-#: includes/class-fkhs-plugin.php:176
-msgid "Sign in in a new tab"
-msgstr "Logg inn i en ny fane"
-
-#: includes/class-fkhs-plugin.php:177
+#: includes/class-fkhs-plugin.php:181
 msgid ""
 "An activity event could not be recorded. Reload the page and repeat the "
 "activity."
@@ -305,11 +383,11 @@ msgstr ""
 "En aktivitetshendelse kunne ikke registreres. Last siden på nytt og gjenta "
 "aktiviteten."
 
-#: includes/class-fkhs-plugin.php:179
+#: includes/class-fkhs-plugin.php:183
 msgid "Waiting for H5P tracking to start…"
 msgstr "Venter på at registreringen av H5P-aktivitet skal starte …"
 
-#: includes/class-fkhs-plugin.php:180
+#: includes/class-fkhs-plugin.php:184
 msgid ""
 "H5P tracking could not start. Retry, or reload this page before repeating "
 "the activity."
@@ -317,103 +395,103 @@ msgstr ""
 "Registreringen av H5P-aktivitet kunne ikke starte. Prøv igjen, eller last "
 "siden på nytt før du gjentar aktiviteten."
 
-#: includes/class-fkhs-plugin.php:181
+#: includes/class-fkhs-plugin.php:185
 msgid "Retry H5P tracking"
 msgstr "Prøv å starte H5P-registreringen igjen"
 
-#: includes/class-fkhs-plugin.php:183
+#: includes/class-fkhs-plugin.php:187
 msgid "Complete the H5P first"
 msgstr "Fullfør H5P-aktiviteten først"
 
-#: includes/class-fkhs-plugin.php:184
+#: includes/class-fkhs-plugin.php:188
 msgid "You need to pass the in-lesson tasks before you can take the quiz."
 msgstr "Du må bestå oppgavene i leksjonen før du kan ta quizen."
 
-#: includes/class-fkhs-plugin.php:185
+#: includes/class-fkhs-plugin.php:189
 msgid ""
 "You need to pass the in-lesson tasks before you can complete the lesson."
 msgstr "Du må bestå oppgavene i leksjonen før du kan fullføre den."
 
-#: includes/class-fkhs-plugin.php:189
+#: includes/class-fkhs-plugin.php:193
 #, php-format
 msgid "This task is passed: %1$s / %2$s points (accepted)."
 msgstr "Oppgaven er bestått: %1$s av %2$s poeng (godkjent)."
 
-#: includes/class-fkhs-plugin.php:190
+#: includes/class-fkhs-plugin.php:194
 #, php-format
 msgid "Not passed. Best score: %1$s / %2$s. Required: %3$s. Click to retry."
 msgstr ""
 "Ikke bestått. Beste resultat: %1$s av %2$s. Krav: %3$s. Velg for å prøve "
 "igjen."
 
-#: includes/class-fkhs-plugin.php:191
+#: includes/class-fkhs-plugin.php:195
 msgid "This task is completed."
 msgstr "Oppgaven er fullført."
 
-#: includes/class-fkhs-plugin.php:192
+#: includes/class-fkhs-plugin.php:196
 msgid "Not completed yet. Click to view."
 msgstr "Ikke fullført ennå. Velg for å vise oppgaven."
 
-#: includes/class-fkhs-plugin.php:193
+#: includes/class-fkhs-plugin.php:197
 msgid "Practice again"
 msgstr "Øv igjen"
 
-#: includes/class-fkhs-plugin.php:194
+#: includes/class-fkhs-plugin.php:198
 msgid "Retry now"
 msgstr "Prøv igjen nå"
 
-#: includes/class-fkhs-plugin.php:195 includes/class-fkhs-reporter.php:93
+#: includes/class-fkhs-plugin.php:199 includes/class-fkhs-reporter.php:93
 msgid "Close"
 msgstr "Lukk"
 
-#: includes/class-fkhs-plugin.php:198
+#: includes/class-fkhs-plugin.php:202
 msgid "Lesson tasks status"
 msgstr "Oppgavestatus for leksjonen"
 
-#: includes/class-fkhs-plugin.php:199
+#: includes/class-fkhs-plugin.php:203
 msgid "All required tasks are satisfied. You can continue."
 msgstr "Alle obligatoriske oppgaver er godkjent. Du kan fortsette."
 
-#: includes/class-fkhs-plugin.php:201
+#: includes/class-fkhs-plugin.php:205
 #, php-format
 msgid "%1$d of %2$d tasks passed"
 msgstr "%1$d av %2$d oppgaver er bestått"
 
-#: includes/class-fkhs-plugin.php:202
+#: includes/class-fkhs-plugin.php:206
 msgid "Remaining:"
 msgstr "Gjenstår:"
 
-#: includes/class-fkhs-plugin.php:204
+#: includes/class-fkhs-plugin.php:208
 #, php-format
 msgid "%1$s — best %2$s, required %3$s"
 msgstr "%1$s — beste resultat %2$s, krav %3$s"
 
-#: includes/class-fkhs-plugin.php:206
+#: includes/class-fkhs-plugin.php:210
 #, php-format
 msgid "%1$s — not completed yet"
 msgstr "%1$s — ikke fullført ennå"
 
-#: includes/class-fkhs-plugin.php:209
+#: includes/class-fkhs-plugin.php:213
 msgid "No mandatory H5P tasks yet."
 msgstr "Ingen obligatoriske H5P-oppgaver ennå."
 
-#: includes/class-fkhs-plugin.php:210
+#: includes/class-fkhs-plugin.php:214
 msgid "Optional interactive content is available."
 msgstr "Valgfritt interaktivt innhold er tilgjengelig."
 
-#: includes/class-fkhs-plugin.php:213
+#: includes/class-fkhs-plugin.php:217
 msgid "Task passed"
 msgstr "Oppgaven er bestått"
 
-#: includes/class-fkhs-plugin.php:214
+#: includes/class-fkhs-plugin.php:218
 msgid "Not passed yet"
 msgstr "Ikke bestått ennå"
 
-#: includes/class-fkhs-plugin.php:215
+#: includes/class-fkhs-plugin.php:219
 msgid "Not completed yet"
 msgstr "Ikke fullført ennå"
 
-#: includes/class-fkhs-plugin.php:218
+#: includes/class-fkhs-plugin.php:222
 msgid "View task"
 msgstr "Vis oppgaven"
 
@@ -555,22 +633,32 @@ msgstr ""
 "forhåndsvisning."
 
 #: includes/class-fkhs-progress-view.php:30
-msgid "H5P progress"
-msgstr "H5P-progresjon"
+msgid "H5P course progress"
+msgstr "H5P-kursprogresjon"
 
 #: includes/class-fkhs-progress-view.php:31
 msgid ""
+"Shows the learner’s H5P requirements across accessible lessons in the "
+"current course. Hidden outside courses and in courses without H5P."
+msgstr ""
+"Viser elevens H5P-krav i tilgjengelige leksjoner i det aktuelle kurset. "
+"Skjules utenfor kurs og i kurs uten H5P."
+
+#: includes/class-fkhs-progress-view.php:32
+msgid "H5P progress"
+msgstr "H5P-progresjon"
+
+#: includes/class-fkhs-progress-view.php:33
+msgid ""
 "Shows the learner’s H5P progress in the current lesson. Hidden automatically "
 "in lessons without H5P activities and on other pages."
-msgstr "Viser elevens H5P-progresjon i den aktuelle leksjonen. Skjules automatisk i leksjoner uten H5P-aktiviteter og på andre sider."
+msgstr ""
+"Viser elevens H5P-progresjon i den aktuelle leksjonen. Skjules automatisk i "
+"leksjoner uten H5P-aktiviteter og på andre sider."
 
-#: includes/class-fkhs-progress-view.php:60
+#: includes/class-fkhs-progress-view.php:62
 msgid "Progress loads when you view this lesson while signed in."
 msgstr "Progresjonen lastes når du ser leksjonen som innlogget."
-
-#: includes/class-fkhs-progress-view.php:61
-msgid "Enable JavaScript to view your progress."
-msgstr "Aktiver JavaScript for å se progresjonen din."
 
 #: includes/class-fkhs-report-query.php:16
 #: includes/class-fkhs-report-query.php:99

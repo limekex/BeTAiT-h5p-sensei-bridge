@@ -9,6 +9,8 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 
 ## Features
 
+- Place **H5P course progress** in course content or a course template (or use `[fkhs_course_progress]`) for the learner’s own summary across accessible lessons. Courses without H5P stay empty; see the [course progress contract](docs/COURSE_PROGRESS.md).
+
 - Place the **H5P progress** layout block in a template or lesson (or use `[fkhs_progress]`) to show the current learner’s requirements and results. It is hidden outside lessons and in lessons without H5P; see the [progress UI/API contract](docs/PROGRESS_API.md).
 - Search and insert existing H5P activities with the **H5P activity** Gutenberg block in Sensei lessons.
 - Set thresholds during placement; the block and lesson metabox share unsaved values.
@@ -20,6 +22,7 @@ It tracks xAPI events, stores attempts, and conditionally unlocks lesson/quiz CT
 - REST endpoints for frontend:
   - `POST /wp-json/fkhs/v1/h5p-xapi`
   - `GET  /wp-json/fkhs/v1/h5p-status?lesson_id=123`
+  - `GET  /wp-json/fkhs/v1/course-progress?course_id=123`
 - Frontend script (`assets/js/h5p-sensei-bridge.js`):
   - Adds status badges and inline result feedback below H5P activities.
   - Locks quiz/lesson CTAs until passed.

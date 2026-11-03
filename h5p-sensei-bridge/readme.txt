@@ -20,6 +20,8 @@ Positive thresholds require a passing result. A zero threshold is optional befor
 
 In Sensei lesson editing, insert the H5P activity block to search existing activities and place their shortcode. Set a threshold immediately or inherit it; the block and lesson metabox share the same values before saving. Repeated activities share one threshold per lesson. Detach synced patterns containing activity blocks before use.
 
+Place H5P course progress in a course or course template, or use [fkhs_course_progress], to show the learner’s own H5P requirements across accessible lessons. The view is hidden outside courses and in courses without H5P. It supports up to 200 published lessons and 500 current activity requirements. Sensei still controls course completion.
+
 Attempts and raw statements are retained by default, including after uninstall. WordPress privacy tools export attempts; complete erasure requires explicit site policy opt-in. Administrator CLI cleanup previews raw-statement removal by default and preserves scores and receipts.
 
 == Installation ==
@@ -35,6 +37,7 @@ https://github.com/limekex/BeTAiT-h5p-sensei-bridge/blob/main/docs/HSB_010_VALID
 == Changelog ==
 
 = 1.2.0-dev (unreleased) =
+* H5P course progress block and [fkhs_course_progress], with private learner-only course summaries.
 * H5P progress layout block for templates and lessons, plus [fkhs_progress]. Hidden automatically without lesson H5P activities.
 * Shared access and progression checks; actual completion signals and durable duplicate receipts.
 * Native Sensei completion guards, accessible feedback and Bokmål translations.

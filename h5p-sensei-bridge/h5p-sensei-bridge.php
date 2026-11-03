@@ -44,6 +44,7 @@ require_once FKHS_DIR . 'includes/class-fkhs-helpers.php';
 require_once FKHS_DIR . 'includes/class-fkhs-editor.php';
 require_once FKHS_DIR . 'includes/class-fkhs-progress.php';
 require_once FKHS_DIR . 'includes/class-fkhs-progress-view.php';
+require_once FKHS_DIR . 'includes/class-fkhs-course-progress.php';
 require_once FKHS_DIR . 'includes/class-fkhs-privacy.php';
 require_once FKHS_DIR . 'includes/class-fkhs-lifecycle-cli.php';
 require_once FKHS_DIR . 'includes/class-fkhs-rest.php';
@@ -101,6 +102,7 @@ add_action(
 		FKHS_Plugin::init();
 		FKHS_Editor::init();
 		FKHS_Progress_View::init();
+		FKHS_Course_Progress::init();
 		FKHS_REST::init();
 		FKHS_Privacy::init();
 		FKHS_Sensei::init();
