@@ -4,6 +4,7 @@
 - Added the Sensei lesson H5P activity block with scoped, paginated registry search, literal shortcode placement and shared block/metabox threshold controls. Native saves, autosaves and revisions preserve lesson-scoped overrides, including explicit zero; synced activity patterns must be detached.
 
 ### Fixed
+- Keep H5P editor controls compact under theme typography, move explanations into expandable details, and use a searchable replacement dialog. Keep threshold inputs active while previews refresh.
 - Version script URLs by plugin version and content hash so reproducible ZIP timestamps cannot keep obsolete browser scripts cached.
 - Validate learner enrollment, lesson access, H5P membership and consumed xAPI fields on both REST paths.
 - Require actual completion signals; remove synthetic inactivity completion and ambiguous answered/progress inference. Preserve existing completion history.

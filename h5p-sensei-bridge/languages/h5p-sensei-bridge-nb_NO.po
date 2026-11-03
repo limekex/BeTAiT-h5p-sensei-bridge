@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: BeTAiT H5P → Sensei Bridge 1.2.0-dev\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/h5p-sensei-"
 "bridge\n"
-"POT-Creation-Date: 2026-11-03T17:25:43+00:00\n"
+"POT-Creation-Date: 2026-11-03T20:40:53+00:00\n"
 "PO-Revision-Date: 2026-11-03 16:30+0100\n"
 "Last-Translator: BeTAiT\n"
 "Language-Team: Norsk bokmål\n"
@@ -37,130 +37,134 @@ msgstr ""
 msgid "BeTAiT / Bjørn-Tore"
 msgstr "BeTAiT / Bjørn-Tore"
 
-#: includes/class-fkhs-editor.php:39
+#: includes/class-fkhs-editor.php:44
 msgid "H5P activity"
 msgstr "H5P-aktivitet"
 
-#: includes/class-fkhs-editor.php:40
+#: includes/class-fkhs-editor.php:45
 msgid "Search activities by title or ID"
 msgstr "Søk etter aktiviteter med tittel eller ID"
 
-#: includes/class-fkhs-editor.php:41
+#: includes/class-fkhs-editor.php:46
 msgid "Select activity"
 msgstr "Velg aktivitet"
 
-#: includes/class-fkhs-editor.php:42
+#: includes/class-fkhs-editor.php:47
 msgid "Replace activity"
 msgstr "Bytt aktivitet"
 
-#: includes/class-fkhs-editor.php:43
+#: includes/class-fkhs-editor.php:48
 msgid "Next page"
 msgstr "Neste side"
 
-#: includes/class-fkhs-editor.php:44
+#: includes/class-fkhs-editor.php:49
 msgid "Previous page"
 msgstr "Forrige side"
 
-#: includes/class-fkhs-editor.php:45
+#: includes/class-fkhs-editor.php:50
 msgid "Loading activities…"
 msgstr "Laster aktiviteter…"
 
-#: includes/class-fkhs-editor.php:46
+#: includes/class-fkhs-editor.php:51
 msgid "No activities found."
 msgstr "Fant ingen aktiviteter."
 
-#: includes/class-fkhs-editor.php:47 includes/class-fkhs-plugin.php:165
+#: includes/class-fkhs-editor.php:52 includes/class-fkhs-plugin.php:165
 #: includes/class-fkhs-reporter.php:91
 msgid "Retry"
 msgstr "Prøv igjen"
 
-#: includes/class-fkhs-editor.php:48
+#: includes/class-fkhs-editor.php:53
 msgid "Could not load activities. Check access and try again."
 msgstr "Kunne ikke laste aktiviteter. Kontroller tilgangen og prøv igjen."
 
-#: includes/class-fkhs-editor.php:49
+#: includes/class-fkhs-editor.php:54
 msgid "Inherit threshold"
 msgstr "Arv terskel"
 
-#: includes/class-fkhs-editor.php:50
+#: includes/class-fkhs-editor.php:55
 msgid "Threshold (%)"
 msgstr "Terskel (%)"
 
-#: includes/class-fkhs-editor.php:51
+#: includes/class-fkhs-editor.php:56
 msgid "Lesson activity thresholds"
 msgstr "Terskler for leksjonens aktiviteter"
 
-#: includes/class-fkhs-editor.php:52
+#: includes/class-fkhs-editor.php:57
 msgid "Insert an activity or an H5P shortcode to set its threshold."
 msgstr "Sett inn en aktivitet eller en H5P-kortkode for å angi terskelen."
 
-#: includes/class-fkhs-editor.php:53
+#: includes/class-fkhs-editor.php:58
 msgid "Repeated uses of an activity share one threshold in this lesson."
 msgstr "Alle forekomster av samme aktivitet deler én terskel i denne leksjonen."
 
-#: includes/class-fkhs-editor.php:54
+#: includes/class-fkhs-editor.php:59
 msgid ""
 "A threshold of 0 is optional before an attempt, then requires an actual "
 "completion signal."
 msgstr "Terskel 0 er valgfri før første forsøk, og krever deretter et faktisk fullføringssignal."
 
-#: includes/class-fkhs-editor.php:55
+#: includes/class-fkhs-editor.php:60
 msgid "Inherited value"
 msgstr "Arvet verdi"
 
-#: includes/class-fkhs-editor.php:56
+#: includes/class-fkhs-editor.php:61
 msgid "Effective preview for your account"
 msgstr "Effektiv terskel for din brukerkonto"
 
-#: includes/class-fkhs-editor.php:57
+#: includes/class-fkhs-editor.php:62
 msgid "Runtime filters may give learners a different effective threshold."
 msgstr "Filtre kan gi elevene en annen effektiv terskel."
 
-#: includes/class-fkhs-editor.php:58
+#: includes/class-fkhs-editor.php:63
 msgid ""
 "Activity unavailable or you do not have access. Existing content is "
 "preserved."
 msgstr "Aktiviteten er utilgjengelig, eller du mangler tilgang. Eksisterende innhold beholdes."
 
-#: includes/class-fkhs-editor.php:59
+#: includes/class-fkhs-editor.php:64
 msgid "Enter a number from 0 to 100."
 msgstr "Skriv et tall fra 0 til 100."
 
-#: includes/class-fkhs-editor.php:60
+#: includes/class-fkhs-editor.php:65
 msgid "This block is available only in Sensei lessons."
 msgstr "Denne blokken er bare tilgjengelig i Sensei-leksjoner."
 
-#: includes/class-fkhs-editor.php:61 includes/class-fkhs-metabox.php:37
+#: includes/class-fkhs-editor.php:66 includes/class-fkhs-metabox.php:37
 msgid "Inherit uses the legacy activity value, then the lesson value, then 70."
 msgstr "Arv bruker først aktivitetens eldre innstilling, deretter leksjonens verdi og til slutt 70."
 
-#: includes/class-fkhs-editor.php:62
+#: includes/class-fkhs-editor.php:67
 msgid "Selected activity"
 msgstr "Valgt aktivitet"
 
-#: includes/class-fkhs-editor.php:80
+#: includes/class-fkhs-editor.php:68
+msgid "About this threshold"
+msgstr "Om terskelen"
+
+#: includes/class-fkhs-editor.php:86
 msgid "You cannot select H5P activities for this lesson."
 msgstr "Du kan ikke velge H5P-aktiviteter for denne leksjonen."
 
-#: includes/class-fkhs-editor.php:83
+#: includes/class-fkhs-editor.php:89
 msgid "H5P is unavailable. Activate it before selecting activities."
 msgstr "H5P er utilgjengelig. Aktiver det før du velger aktiviteter."
 
-#: includes/class-fkhs-editor.php:117
+#: includes/class-fkhs-editor.php:123
 msgid "Activity lookup failed. Try again."
 msgstr "Kunne ikke hente aktiviteter. Prøv igjen."
 
-#: includes/class-fkhs-editor.php:143
+#: includes/class-fkhs-editor.php:149
 msgid ""
 "Thresholds must be 0–100 and belong to available activities in this lesson. "
 "Reload if the lesson changed."
 msgstr "Tersklene må være 0–100 og tilhøre tilgjengelige aktiviteter i leksjonen. Last inn på nytt hvis leksjonen er endret."
 
-#: includes/class-fkhs-editor.php:165
+#: includes/class-fkhs-editor.php:171
 msgid "Could not save activity thresholds. Try saving the lesson again."
 msgstr "Kunne ikke lagre aktivitetstersklene. Prøv å lagre leksjonen på nytt."
 
-#: includes/class-fkhs-editor.php:198
+#: includes/class-fkhs-editor.php:204
 msgid "Detach the synced pattern before using H5P activity blocks in a lesson."
 msgstr "Koble fra det synkroniserte mønsteret før du bruker H5P-aktivitetsblokker i en leksjon."
 

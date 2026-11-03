@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-03T17:25:43+00:00\n"
+"POT-Creation-Date: 2026-11-03T20:40:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: h5p-sensei-bridge\n"
@@ -29,126 +29,130 @@ msgstr ""
 msgid "BeTAiT / Bjørn-Tore"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:39
+#: includes/class-fkhs-editor.php:44
 msgid "H5P activity"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:40
+#: includes/class-fkhs-editor.php:45
 msgid "Search activities by title or ID"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:41
+#: includes/class-fkhs-editor.php:46
 msgid "Select activity"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:42
+#: includes/class-fkhs-editor.php:47
 msgid "Replace activity"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:43
+#: includes/class-fkhs-editor.php:48
 msgid "Next page"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:44
+#: includes/class-fkhs-editor.php:49
 msgid "Previous page"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:45
+#: includes/class-fkhs-editor.php:50
 msgid "Loading activities…"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:46
+#: includes/class-fkhs-editor.php:51
 msgid "No activities found."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:47
+#: includes/class-fkhs-editor.php:52
 #: includes/class-fkhs-plugin.php:165
 #: includes/class-fkhs-reporter.php:91
 msgid "Retry"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:48
+#: includes/class-fkhs-editor.php:53
 msgid "Could not load activities. Check access and try again."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:49
+#: includes/class-fkhs-editor.php:54
 msgid "Inherit threshold"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:50
+#: includes/class-fkhs-editor.php:55
 msgid "Threshold (%)"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:51
+#: includes/class-fkhs-editor.php:56
 msgid "Lesson activity thresholds"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:52
+#: includes/class-fkhs-editor.php:57
 msgid "Insert an activity or an H5P shortcode to set its threshold."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:53
+#: includes/class-fkhs-editor.php:58
 msgid "Repeated uses of an activity share one threshold in this lesson."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:54
+#: includes/class-fkhs-editor.php:59
 msgid "A threshold of 0 is optional before an attempt, then requires an actual completion signal."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:55
+#: includes/class-fkhs-editor.php:60
 msgid "Inherited value"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:56
+#: includes/class-fkhs-editor.php:61
 msgid "Effective preview for your account"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:57
+#: includes/class-fkhs-editor.php:62
 msgid "Runtime filters may give learners a different effective threshold."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:58
+#: includes/class-fkhs-editor.php:63
 msgid "Activity unavailable or you do not have access. Existing content is preserved."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:59
+#: includes/class-fkhs-editor.php:64
 msgid "Enter a number from 0 to 100."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:60
+#: includes/class-fkhs-editor.php:65
 msgid "This block is available only in Sensei lessons."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:61
+#: includes/class-fkhs-editor.php:66
 #: includes/class-fkhs-metabox.php:37
 msgid "Inherit uses the legacy activity value, then the lesson value, then 70."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:62
+#: includes/class-fkhs-editor.php:67
 msgid "Selected activity"
 msgstr ""
 
-#: includes/class-fkhs-editor.php:80
+#: includes/class-fkhs-editor.php:68
+msgid "About this threshold"
+msgstr ""
+
+#: includes/class-fkhs-editor.php:86
 msgid "You cannot select H5P activities for this lesson."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:83
+#: includes/class-fkhs-editor.php:89
 msgid "H5P is unavailable. Activate it before selecting activities."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:117
+#: includes/class-fkhs-editor.php:123
 msgid "Activity lookup failed. Try again."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:143
+#: includes/class-fkhs-editor.php:149
 msgid "Thresholds must be 0–100 and belong to available activities in this lesson. Reload if the lesson changed."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:165
+#: includes/class-fkhs-editor.php:171
 msgid "Could not save activity thresholds. Try saving the lesson again."
 msgstr ""
 
-#: includes/class-fkhs-editor.php:198
+#: includes/class-fkhs-editor.php:204
 msgid "Detach the synced pattern before using H5P activity blocks in a lesson."
 msgstr ""
 

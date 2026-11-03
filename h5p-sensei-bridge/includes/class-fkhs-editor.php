@@ -25,12 +25,17 @@ class FKHS_Editor {
                 'prepare_callback'=>static function($value){return (object)(is_array($value)?$value:array());},
             ),
         ));
-        register_block_type('fkhs/activity',array('api_version'=>3,'attributes'=>array('contentId'=>array('type'=>'integer','default'=>0)), 'supports'=>array('html'=>false,'reusable'=>false)));
+        $style='assets/css/h5p-sensei-editor.css';
+        wp_register_style('fkhs-editor',FKHS_URL.$style,array(),FKHS_VER.'-'.substr(hash_file('sha256',FKHS_DIR.$style),0,12));
+        register_block_type('fkhs/activity',array('api_version'=>3,'editor_style'=>'fkhs-editor','attributes'=>array('contentId'=>array('type'=>'integer','default'=>0)), 'supports'=>array('html'=>false,'reusable'=>false)));
     }
 
     public static function enqueue(): void {
         $screen=get_current_screen();
         if (!$screen || $screen->post_type!=='lesson') { return; }
+        // The block editor also loads editor_style inside its canvas iframe.
+        // Enqueue here for the metabox and modal in the outer editor document.
+        wp_enqueue_style('fkhs-editor');
         $path=FKHS_DIR.'assets/js/h5p-sensei-editor.js';
         wp_enqueue_script('fkhs-editor',FKHS_URL.'assets/js/h5p-sensei-editor.js',array('wp-blocks','wp-block-editor','wp-element','wp-components','wp-data','wp-editor','wp-api-fetch','wp-i18n','wp-dom-ready','shortcode'),FKHS_VER.'-'.substr(hash_file('sha256',$path),0,12),true);
         wp_set_script_translations('fkhs-editor','h5p-sensei-bridge',FKHS_DIR.'languages');
@@ -60,6 +65,7 @@ class FKHS_Editor {
             'OnlyLesson'=>__( 'This block is available only in Sensei lessons.', 'h5p-sensei-bridge' ),
             'Legacy'=>__( 'Inherit uses the legacy activity value, then the lesson value, then 70.', 'h5p-sensei-bridge' ),
             'Selected'=>__( 'Selected activity', 'h5p-sensei-bridge' ),
+            'Details'=>__( 'About this threshold', 'h5p-sensei-bridge' ),
         );
         wp_localize_script('fkhs-editor','fkhsEditor',array('labels'=>$labels));
     }

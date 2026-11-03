@@ -48,6 +48,14 @@ Using the authorized FagKlar site at `http://localhost:8887/`, a dedicated test 
 
 Only dedicated fixtures were changed; no existing learner attempts were rewritten. Test-user sessions are expired after verification. Fixture drafts remain available for maintainer inspection.
 
+## Editor layout follow-up
+
+The original canvas inherited FagKlar's large typography and paragraph spacing and displayed all explanatory copy at once. The editor now uses a scoped stylesheet registered as the block's `editor_style` (canvas iframe) and enqueued in the outer editor (metabox/modal). Activity identity and threshold controls form a compact card; zero-only guidance appears when relevant, and “About this threshold” contains inheritance/filter/shared-value explanations and the shortcode. Replacement opens a native WordPress modal with bounded, scrollable search results. The saved block markup and threshold persistence contract are unchanged.
+
+Local Gutenberg checks confirmed desktop and mobile canvas layout, shared zero/positive values in block and metabox, invalid-value save locking, keyboard opening of details, and selecting a replacement result with Enter and restored focus. Selected-activity data remains visible during preview requests so typing does not temporarily disable the threshold field. The stylesheet uses a content hash for cache invalidation and is required in the installable ZIP.
+
+The “quiz block” used in earlier integration work is Sensei's existing `sensei-lms/quiz`, built as test content in `tests/fixtures/block-quiz.php`; this plugin does not register another quiz block. An H5P QuestionSet quiz is existing H5P content placed with `fkhs/activity`.
+
 ## Remaining rollout limits
 
 The site-specific release gate from HSB-010 still applies. Wider screen-reader/mobile/browser coverage, additional deployed H5P types, large-registry search latency, custom editor restrictions and third-party revision integrations remain rollout checks. This implementation does not create/upload H5P, provide independent thresholds per occurrence, support synced activity patterns or publish an external progress API. HSB-011 remains the next planned product task.
